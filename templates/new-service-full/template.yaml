@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: new-service-full
   title: New Service + Deploy (1+2)
-  description: Cria um novo serviço Fastify com CI, observabilidade, manifests k8s e registra no catalog.
+  description: Cria um novo serviço Fastify com CI, observabilidade e manifests k8s (kustomize + AppNamespace). Registra automaticamente no catalog.
   tags:
     - nodejs
     - fastify
@@ -20,7 +20,7 @@ spec:
         name:
           title: Nome
           type: string
-          description: Nome do serviço em kebab-case (ex. app-payments)
+          description: Nome em kebab-case (ex. app-payments)
           pattern: '^[a-z][a-z0-9-]+$'
           ui:autofocus: true
         description:
@@ -38,7 +38,6 @@ spec:
         system:
           title: Sistema
           type: string
-          description: Sistema ao qual o serviço pertence
           default: platform-lab
 
     - title: Deploy
@@ -71,16 +70,25 @@ spec:
               - TourinhoM
 
   steps:
-    - id: fetch
-      name: Montar esqueleto
+    - id: fetch-base
+      name: Montar esqueleto base
       action: fetch:template
       input:
-        url: ./skeleton
+        url: ../new-service/skeleton
         values:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
+
+    - id: fetch-k8s
+      name: Adicionar manifests k8s
+      action: fetch:template
+      input:
+        url: ./skeleton/k8s
+        targetPath: k8s
+        values:
+          name: ${{ parameters.name }}
           teamName: ${{ parameters.teamName }}
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
@@ -89,7 +97,6 @@ spec:
       name: Criar repositório no GitHub
       action: publish:github
       input:
-        allowedHosts: ['github.com']
         description: ${{ parameters.description }}
         repoUrl: ${{ parameters.repoUrl }}
         defaultBranch: main
