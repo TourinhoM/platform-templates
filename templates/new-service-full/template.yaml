@@ -1,13 +1,14 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: new-service
-  title: New Service (1+1)
-  description: Cria um novo serviço Fastify com CI, observabilidade e registra no catalog.
+  name: new-service-full
+  title: New Service + Deploy (1+2)
+  description: Cria um novo serviço Fastify com CI, observabilidade, manifests k8s e registra no catalog.
   tags:
     - nodejs
     - fastify
     - service
+    - kubernetes
 spec:
   owner: group:default/platform
   type: service
@@ -40,6 +41,22 @@ spec:
           description: Sistema ao qual o serviço pertence
           default: platform-lab
 
+    - title: Deploy
+      required: [teamName]
+      properties:
+        teamName:
+          title: Nome do time (AppNamespace)
+          type: string
+          description: Usado para provisionar o namespace no cluster
+        cpuLimit:
+          title: CPU limit
+          type: string
+          default: "2"
+        memoryLimit:
+          title: Memory limit
+          type: string
+          default: 2Gi
+
     - title: Repositório
       required: [repoUrl]
       properties:
@@ -64,6 +81,9 @@ spec:
           description: ${{ parameters.description }}
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
+          teamName: ${{ parameters.teamName }}
+          cpuLimit: ${{ parameters.cpuLimit }}
+          memoryLimit: ${{ parameters.memoryLimit }}
 
     - id: publish
       name: Criar repositório no GitHub
