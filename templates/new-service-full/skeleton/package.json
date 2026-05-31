@@ -1,0 +1,16 @@
+{
+  "name": "${{ values.name }}",
+  "version": "0.0.0",
+  "description": "${{ values.description }}",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --require @opentelemetry/auto-instrumentations-node/register src/index.js",
+    "dev": "node --require @opentelemetry/auto-instrumentations-node/register --watch src/index.js"
+  },
+  "dependencies": {
+    "@opentelemetry/auto-instrumentations-node": "^0.75.0",
+    "fastify": "^5.7.2",
+    "prom-client": "^15.1.3",
+    "undici": "^6.21.0"
+  }
+}

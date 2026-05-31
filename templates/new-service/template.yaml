@@ -1,0 +1,90 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: new-service
+  title: New Service (1+1)
+  description: Cria um novo serviço Fastify com CI, observabilidade e registra no catalog.
+  tags:
+    - nodejs
+    - fastify
+    - service
+spec:
+  owner: group:default/platform
+  type: service
+
+  parameters:
+    - title: Informações do serviço
+      required: [name, description, owner]
+      properties:
+        name:
+          title: Nome
+          type: string
+          description: Nome do serviço em kebab-case (ex. app-payments)
+          pattern: '^[a-z][a-z0-9-]+$'
+          ui:autofocus: true
+        description:
+          title: Descrição
+          type: string
+          description: O que esse serviço faz?
+        owner:
+          title: Dono
+          type: string
+          description: Time responsável
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: [Group, User]
+        system:
+          title: Sistema
+          type: string
+          description: Sistema ao qual o serviço pertence
+          default: platform-lab
+
+    - title: Repositório
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Localização do repositório
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+            allowedOwners:
+              - TourinhoM
+
+  steps:
+    - id: fetch
+      name: Montar esqueleto
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ parameters.owner }}
+          system: ${{ parameters.system }}
+
+    - id: publish
+      name: Criar repositório no GitHub
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: ${{ parameters.description }}
+        repoUrl: ${{ parameters.repoUrl }}
+        defaultBranch: main
+
+    - id: register
+      name: Registrar no catalog
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: /catalog-info.yaml
+
+  output:
+    links:
+      - title: Repositório
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Ver no catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}
