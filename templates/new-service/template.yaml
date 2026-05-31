@@ -9,7 +9,7 @@ metadata:
     - fastify
     - service
 spec:
-  owner: group:default/platform
+  owner: group:default/team-alpha
   type: service
 
   parameters:

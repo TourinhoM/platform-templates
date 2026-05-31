@@ -10,7 +10,7 @@ metadata:
     - service
     - kubernetes
 spec:
-  owner: group:default/platform
+  owner: group:default/team-alpha
   type: service
 
   parameters:
