@@ -14,6 +14,14 @@ spec:
   type: service
 
   parameters:
+    - title: Tipo de serviço
+      properties:
+        includeK8s:
+          title: Incluir manifests Kubernetes?
+          type: boolean
+          default: false
+          description: Gera kustomization + AppNamespace para deploy no cluster (1+1 ou 1+2)
+
     - title: Informações do serviço
       required: [name, description, owner]
       properties:
@@ -40,14 +48,9 @@ spec:
           title: Sistema
           type: string
           default: platform-lab
-        includeK8s:
-          title: Incluir manifests Kubernetes?
-          type: boolean
-          default: false
-          description: Gera kustomization + AppNamespace para deploy no cluster
 
     - title: Deploy
-      if: ${{ parameters.includeK8s }}
+      if: ${{ parameters.includeK8s === true }}
       required: [teamName]
       properties:
         teamName:
@@ -90,7 +93,7 @@ spec:
 
     - id: fetch-k8s
       name: Adicionar manifests k8s
-      if: ${{ parameters.includeK8s }}
+      if: ${{ parameters.includeK8s === true }}
       action: fetch:template
       input:
         url: ../new-service-full/skeleton/k8s
