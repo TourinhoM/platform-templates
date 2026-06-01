@@ -30,7 +30,7 @@ spec:
           title: Dono
           type: string
           description: Time responsável
-          default: ${{ user.ref }}
+          ui:placeholder: Selecione o dono
           ui:field: OwnerPicker
           ui:options:
             catalogFilter:

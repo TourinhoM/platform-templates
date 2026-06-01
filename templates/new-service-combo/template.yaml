@@ -39,7 +39,7 @@ spec:
           title: Dono
           type: string
           description: Time responsável
-          default: ${{ user.ref }}
+          ui:placeholder: Selecione o dono
           ui:field: OwnerPicker
           ui:options:
             catalogFilter:
@@ -50,7 +50,7 @@ spec:
           default: platform-lab
 
     - title: Deploy
-      if: ${{ parameters.includeK8s === true }}
+      if: ${{ parameters.includeK8s == true }}
       required: [teamName]
       properties:
         teamName:
@@ -93,7 +93,7 @@ spec:
 
     - id: fetch-k8s
       name: Adicionar manifests k8s
-      if: ${{ parameters.includeK8s === true }}
+      if: ${{ parameters.includeK8s == true }}
       action: fetch:template
       input:
         url: ../new-service-full/skeleton/k8s
