@@ -7,3 +7,4 @@ spec:
   targets:
     - ./templates/new-service/template.yaml
     - ./templates/new-service-full/template.yaml
+    - ./templates/new-service-combo/template.yaml

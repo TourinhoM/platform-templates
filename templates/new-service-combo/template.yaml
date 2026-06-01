@@ -1,9 +1,9 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: new-service-full
-  title: New Service + Deploy (1+2)
-  description: Cria um novo serviço Fastify com CI, observabilidade e manifests k8s (kustomize + AppNamespace). Registra automaticamente no catalog.
+  name: new-service-combo
+  title: New Service
+  description: Cria um novo serviço Fastify com CI e observabilidade. Opcionalmente inclui manifests Kubernetes para deploy no cluster.
   tags:
     - nodejs
     - fastify
@@ -40,8 +40,14 @@ spec:
           title: Sistema
           type: string
           default: platform-lab
+        includeK8s:
+          title: Incluir manifests Kubernetes?
+          type: boolean
+          default: false
+          description: Gera kustomization + AppNamespace para deploy no cluster
 
     - title: Deploy
+      if: ${{ parameters.includeK8s }}
       required: [teamName]
       properties:
         teamName:
@@ -84,9 +90,10 @@ spec:
 
     - id: fetch-k8s
       name: Adicionar manifests k8s
+      if: ${{ parameters.includeK8s }}
       action: fetch:template
       input:
-        url: ./skeleton/k8s
+        url: ../new-service-full/skeleton/k8s
         targetPath: k8s
         values:
           name: ${{ parameters.name }}
