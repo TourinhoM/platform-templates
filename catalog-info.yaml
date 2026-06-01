@@ -2,7 +2,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Location
 metadata:
   name: platform-templates
-  description: Platform Engineering templates for TourinhoM org
+  description: Platform Engineering templates (apps criadas na org tourinho-labs)
 spec:
   targets:
     - ./templates/new-service/template.yaml
