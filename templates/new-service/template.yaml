@@ -30,6 +30,7 @@ spec:
           title: Dono
           type: string
           description: Time responsável
+          default: ${{ user.ref | replace("user:default/", "") }}
           ui:field: OwnerPicker
           ui:options:
             catalogFilter:
