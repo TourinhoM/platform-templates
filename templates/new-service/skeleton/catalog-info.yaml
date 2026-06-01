@@ -1,12 +1,47 @@
+# Descriptor gerado pelo scaffolder. Formato e campos bem-conhecidos:
+# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: ${{ values.name }}
+{%- if values.title %}
+  title: ${{ values.title }}
+{%- endif %}
   description: ${{ values.description }}
   annotations:
-    github.com/project-slug: tourinho-labs/${{ values.name }}
+    # project-slug derivado do repositório escolhido (não hardcoded)
+    github.com/project-slug: ${{ values.repoSlug }}
+    # TechDocs lê o mkdocs.yml na raiz do próprio repo
+    backstage.io/techdocs-ref: dir:.
+{%- if values.includeK8s %}
+    # liga o componente aos workloads no cluster e ao app do Argo CD
+    backstage.io/kubernetes-id: ${{ values.name }}
+    argocd/app-name: ${{ values.name }}
+{%- endif %}
+{%- if values.tags | length %}
+  tags:
+{%- for tag in values.tags %}
+    - ${{ tag }}
+{%- endfor %}
+{%- endif %}
+  links:
+    - url: https://github.com/${{ values.repoSlug }}
+      title: Repositório
+      icon: github
 spec:
-  type: service
-  lifecycle: experimental
+  type: ${{ values.type }}
+  lifecycle: ${{ values.lifecycle }}
   owner: ${{ values.owner }}
   system: ${{ values.system }}
+{%- if values.dependsOn | length %}
+  dependsOn:
+{%- for dep in values.dependsOn %}
+    - ${{ dep }}
+{%- endfor %}
+{%- endif %}
+{%- if values.providesApis | length %}
+  providesApis:
+{%- for api in values.providesApis %}
+    - ${{ api }}
+{%- endfor %}
+{%- endif %}

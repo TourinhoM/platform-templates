@@ -14,8 +14,8 @@ spec:
   type: service
 
   parameters:
-    - title: Informações do serviço
-      required: [name, description]
+    - title: Sobre o serviço
+      required: [name, description, owner]
       properties:
         name:
           title: Nome
@@ -23,14 +23,67 @@ spec:
           description: Nome em kebab-case (ex. app-payments)
           pattern: '^[a-z][a-z0-9-]+$'
           ui:autofocus: true
+        title:
+          title: Título
+          type: string
+          description: Nome amigável exibido no catalog (opcional)
         description:
           title: Descrição
           type: string
           description: O que esse serviço faz?
+        type:
+          title: Tipo
+          type: string
+          description: Tipo de componente (catalog-model)
+          default: service
+          enum: [service, website, library]
+        lifecycle:
+          title: Lifecycle
+          type: string
+          default: experimental
+          enum: [experimental, production, deprecated]
+        owner:
+          title: Owner
+          type: string
+          description: Time ou pessoa dona do serviço
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              - kind: [Group, User]
         system:
           title: Sistema
           type: string
+          description: Sistema ao qual o componente pertence
           default: platform-lab
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: System
+            allowArbitraryValues: true
+        tags:
+          title: Tags
+          type: array
+          description: Tags reaproveitadas do catalog (autocomplete)
+          ui:field: EntityTagsPicker
+
+    - title: Relações
+      properties:
+        dependsOn:
+          title: Depende de
+          type: array
+          description: Components ou Resources dos quais este serviço depende
+          ui:field: MultiEntityPicker
+          ui:options:
+            catalogFilter:
+              kind: [Component, Resource]
+        providesApis:
+          title: APIs fornecidas
+          type: array
+          description: APIs que este serviço expõe
+          ui:field: MultiEntityPicker
+          ui:options:
+            catalogFilter:
+              kind: API
 
     - title: Deploy
       required: [teamName]
@@ -69,9 +122,17 @@ spec:
         url: ../new-service/skeleton
         values:
           name: ${{ parameters.name }}
+          title: ${{ parameters.title or '' }}
           description: ${{ parameters.description }}
-          owner: ${{ user.ref }}
+          type: ${{ parameters.type }}
+          lifecycle: ${{ parameters.lifecycle }}
+          owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
+          tags: ${{ parameters.tags or [] }}
+          dependsOn: ${{ parameters.dependsOn or [] }}
+          providesApis: ${{ parameters.providesApis or [] }}
+          repoSlug: ${{ (parameters.repoUrl | parseRepoUrl).owner }}/${{ (parameters.repoUrl | parseRepoUrl).repo }}
+          includeK8s: true
 
     - id: fetch-k8s
       name: Adicionar manifests k8s
