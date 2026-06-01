@@ -15,7 +15,7 @@ spec:
 
   parameters:
     - title: Informações do serviço
-      required: [name, description, owner]
+      required: [name, description]
       properties:
         name:
           title: Nome
@@ -27,15 +27,6 @@ spec:
           title: Descrição
           type: string
           description: O que esse serviço faz?
-        owner:
-          title: Dono
-          type: string
-          description: Time responsável
-          ui:placeholder: Selecione o dono
-          ui:field: OwnerPicker
-          ui:options:
-            catalogFilter:
-              kind: [Group, User]
         system:
           title: Sistema
           type: string
@@ -79,7 +70,7 @@ spec:
         values:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
-          owner: ${{ parameters.owner }}
+          owner: ${{ user.ref }}
           system: ${{ parameters.system }}
 
     - id: fetch-k8s
