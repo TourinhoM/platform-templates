@@ -1,0 +1,80 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: lambda
+  title: Lambda
+  description: Cria uma Lambda escolhendo o runtime (Python ou Quarkus) no form. Registra no catalog.
+  tags:
+    - lambda
+    - serverless
+spec:
+  owner: group:default/platform-engineering
+  type: service
+
+  parameters:
+    - title: Nova Lambda
+      required: [name, description, runtime]
+      properties:
+        name:
+          title: Nome
+          type: string
+          description: kebab-case — vira o nome do repo (ex. pagamentos-processador)
+          pattern: '^[a-z][a-z0-9-]+$'
+          ui:autofocus: true
+        description:
+          title: Descrição
+          type: string
+          description: O que essa Lambda faz?
+        runtime:
+          title: Runtime
+          type: string
+          default: python
+          enum:
+            - python
+            - quarkus
+          enumNames:
+            - Python
+            - Quarkus
+          ui:widget: radio
+        memory:
+          title: Memória (MB)
+          type: integer
+          default: 512
+        timeout:
+          title: Timeout (s)
+          type: integer
+          default: 30
+
+  steps:
+    - id: fetch-python
+      name: Base Python
+      if: ${{ parameters.runtime == 'python' }}
+      action: fetch:template
+      input:
+        url: ./skeleton/python
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ user.ref }}
+          memory: ${{ parameters.memory }}
+          timeout: ${{ parameters.timeout }}
+
+    - id: fetch-quarkus
+      name: Base Quarkus
+      if: ${{ parameters.runtime == 'quarkus' }}
+      action: fetch:template
+      input:
+        url: ./skeleton/quarkus
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ user.ref }}
+          memory: ${{ parameters.memory }}
+          timeout: ${{ parameters.timeout }}
+
+    - $yaml: ../_shared/step-publish.yaml
+
+    - $yaml: ../_shared/step-register.yaml
+
+  output:
+    $yaml: ../_shared/output.yaml

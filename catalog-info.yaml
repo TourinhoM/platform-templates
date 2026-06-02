@@ -9,3 +9,4 @@ spec:
     - ./templates/new-service/template.yaml
     - ./templates/new-service-full/template.yaml
     - ./templates/new-service-combo/template.yaml
+    - ./templates/lambda/template.yaml

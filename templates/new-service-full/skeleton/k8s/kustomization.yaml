@@ -7,12 +7,14 @@ components:
 resources:
   - claims/appnamespace.yaml
 
-# Label em metadata de todos os recursos (não nos selectors) para o
-# plugin Kubernetes do Backstage descobrir os workloads via kubernetes-id.
+# Label em metadata e no pod template (não nos selectors imutáveis) para o
+# plugin Kubernetes do Backstage descobrir os workloads E os pods via kubernetes-id.
+# includeTemplates propaga pro pod template; includeSelectors:false preserva o selector.
 labels:
   - pairs:
       backstage.io/kubernetes-id: ${{ values.name }}
     includeSelectors: false
+    includeTemplates: true
 
 generatorOptions:
   disableNameSuffixHash: true

@@ -1,0 +1,17 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description }}
+  annotations:
+    github.com/project-slug: tourinho-labs/${{ values.name }}
+    lambda.platform/runtime: python
+    lambda.platform/memory: "${{ values.memory }}"
+    lambda.platform/timeout: "${{ values.timeout }}"
+  tags:
+    - lambda
+    - python
+spec:
+  type: service
+  lifecycle: experimental
+  owner: ${{ values.owner }}
