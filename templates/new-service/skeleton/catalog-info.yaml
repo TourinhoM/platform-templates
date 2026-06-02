@@ -1,47 +1,35 @@
-# Descriptor gerado pelo scaffolder. Formato e campos bem-conhecidos:
+# Gerado pelo scaffolder. Quase tudo é derivado — edite só o que precisar.
 # https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: ${{ values.name }}
-{%- if values.title %}
-  title: ${{ values.title }}
-{%- endif %}
   description: ${{ values.description }}
   annotations:
-    # project-slug derivado do repositório escolhido (não hardcoded)
-    github.com/project-slug: ${{ values.repoSlug }}
-    # TechDocs lê o mkdocs.yml na raiz do próprio repo
+    github.com/project-slug: tourinho-labs/${{ values.name }}
     backstage.io/techdocs-ref: dir:.
 {%- if values.includeK8s %}
-    # liga o componente aos workloads no cluster e ao app do Argo CD
     backstage.io/kubernetes-id: ${{ values.name }}
     argocd/app-name: ${{ values.name }}
 {%- endif %}
-{%- if values.tags | length %}
   tags:
-{%- for tag in values.tags %}
-    - ${{ tag }}
-{%- endfor %}
+    - nodejs
+    - fastify
+{%- if values.includeK8s %}
+    - kubernetes
 {%- endif %}
   links:
-    - url: https://github.com/${{ values.repoSlug }}
+    - url: https://github.com/tourinho-labs/${{ values.name }}
       title: Repositório
       icon: github
 spec:
-  type: ${{ values.type }}
-  lifecycle: ${{ values.lifecycle }}
+  type: service
+  lifecycle: experimental
   owner: ${{ values.owner }}
-  system: ${{ values.system }}
-{%- if values.dependsOn | length %}
-  dependsOn:
-{%- for dep in values.dependsOn %}
-    - ${{ dep }}
-{%- endfor %}
-{%- endif %}
-{%- if values.providesApis | length %}
-  providesApis:
-{%- for api in values.providesApis %}
-    - ${{ api }}
-{%- endfor %}
-{%- endif %}
+  system: platform-lab
+  # Relações surgem com o tempo — descomente e aponte quando existirem.
+  # O auto-discovery reingere este arquivo sozinho a cada 30min.
+  # dependsOn:
+  #   - resource:postgresql
+  # providesApis:
+  #   - minha-api
