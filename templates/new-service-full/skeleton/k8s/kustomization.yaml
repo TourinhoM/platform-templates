@@ -7,6 +7,13 @@ components:
 resources:
   - claims/appnamespace.yaml
 
+# Label em metadata de todos os recursos (não nos selectors) para o
+# plugin Kubernetes do Backstage descobrir os workloads via kubernetes-id.
+labels:
+  - pairs:
+      backstage.io/kubernetes-id: ${{ values.name }}
+    includeSelectors: false
+
 generatorOptions:
   disableNameSuffixHash: true
 
