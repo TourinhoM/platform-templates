@@ -1,0 +1,23 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: platform-lab
+  description: Plataforma interna — IDP, CI/CD e infraestrutura compartilhada.
+spec:
+  owner: group:default/platform-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: customer-apps
+  description: Aplicações de produto voltadas ao usuário final.
+spec:
+  owner: group:default/platform-engineering
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: data-platform
+  description: Serviços de dados, pipelines e armazenamento.
+spec:
+  owner: group:default/platform-engineering

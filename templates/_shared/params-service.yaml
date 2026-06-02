@@ -1,5 +1,5 @@
 title: Novo serviço
-required: [name, description]
+required: [name, description, system]
 properties:
   name:
     title: Nome
@@ -11,3 +11,13 @@ properties:
     title: Descrição
     type: string
     description: O que esse serviço faz?
+  system:
+    title: System
+    type: string
+    description: A qual system este serviço pertence
+    ui:field: EntityPicker
+    ui:options:
+      catalogFilter:
+        kind: System
+      defaultKind: System
+      allowArbitraryValues: false

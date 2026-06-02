@@ -25,6 +25,7 @@ spec:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
+          system: ${{ parameters.system }}
           includeK8s: false
 
     - $yaml: ../_shared/step-publish.yaml

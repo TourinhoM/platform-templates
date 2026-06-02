@@ -41,6 +41,7 @@ spec:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
+          system: ${{ parameters.system }}
           includeK8s: true
 
     - id: fetch-k8s

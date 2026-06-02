@@ -26,7 +26,7 @@ spec:
   type: service
   lifecycle: experimental
   owner: ${{ values.owner }}
-  system: platform-lab
+  system: ${{ values.system }}
   # Relações surgem com o tempo — descomente e aponte quando existirem.
   # O auto-discovery reingere este arquivo sozinho a cada 30min.
   # dependsOn:

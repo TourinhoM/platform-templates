@@ -5,6 +5,7 @@ metadata:
   description: Platform Engineering templates (apps criadas na org tourinho-labs)
 spec:
   targets:
+    - ./catalog/systems.yaml
     - ./templates/new-service/template.yaml
     - ./templates/new-service-full/template.yaml
     - ./templates/new-service-combo/template.yaml
