@@ -1,0 +1,13 @@
+title: Novo serviço
+required: [name, description]
+properties:
+  name:
+    title: Nome
+    type: string
+    description: kebab-case — vira o nome do repo e do componente (ex. app-payments)
+    pattern: '^[a-z][a-z0-9-]+$'
+    ui:autofocus: true
+  description:
+    title: Descrição
+    type: string
+    description: O que esse serviço faz?

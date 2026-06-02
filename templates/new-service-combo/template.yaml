@@ -74,25 +74,9 @@ spec:
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
 
-    - id: publish
-      name: Criar repositório no GitHub
-      action: publish:github
-      input:
-        description: ${{ parameters.description }}
-        repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
-        defaultBranch: main
+    - $yaml: ../_shared/step-publish.yaml
 
-    - id: register
-      name: Registrar no catalog
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
+    - $yaml: ../_shared/step-register.yaml
 
   output:
-    links:
-      - title: Repositório
-        url: ${{ steps.publish.output.remoteUrl }}
-      - title: Ver no catalog
-        icon: catalog
-        entityRef: ${{ steps.register.output.entityRef }}
+    $yaml: ../_shared/output.yaml

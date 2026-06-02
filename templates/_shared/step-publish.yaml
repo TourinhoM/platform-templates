@@ -1,0 +1,7 @@
+id: publish
+name: Criar repositório no GitHub
+action: publish:github
+input:
+  description: ${{ parameters.description }}
+  repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
+  defaultBranch: main

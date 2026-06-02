@@ -1,0 +1,6 @@
+links:
+  - title: Repositório
+    url: ${{ steps.publish.output.remoteUrl }}
+  - title: Ver no catalog
+    icon: catalog
+    entityRef: ${{ steps.register.output.entityRef }}

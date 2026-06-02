@@ -14,19 +14,7 @@ spec:
   type: service
 
   parameters:
-    - title: Novo serviço
-      required: [name, description]
-      properties:
-        name:
-          title: Nome
-          type: string
-          description: kebab-case — vira o nome do repo e do componente (ex. app-payments)
-          pattern: '^[a-z][a-z0-9-]+$'
-          ui:autofocus: true
-        description:
-          title: Descrição
-          type: string
-          description: O que esse serviço faz?
+    - $yaml: ../_shared/params-service.yaml
 
     - title: Deploy (opcional — tem defaults)
       properties:
@@ -67,25 +55,9 @@ spec:
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
 
-    - id: publish
-      name: Criar repositório no GitHub
-      action: publish:github
-      input:
-        description: ${{ parameters.description }}
-        repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
-        defaultBranch: main
+    - $yaml: ../_shared/step-publish.yaml
 
-    - id: register
-      name: Registrar no catalog
-      action: catalog:register
-      input:
-        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
-        catalogInfoPath: /catalog-info.yaml
+    - $yaml: ../_shared/step-register.yaml
 
   output:
-    links:
-      - title: Repositório
-        url: ${{ steps.publish.output.remoteUrl }}
-      - title: Ver no catalog
-        icon: catalog
-        entityRef: ${{ steps.register.output.entityRef }}
+    $yaml: ../_shared/output.yaml
