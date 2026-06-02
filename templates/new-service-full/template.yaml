@@ -37,6 +37,10 @@ spec:
       action: fetch:template
       input:
         url: ../new-service/skeleton
+        # Workflows usam ${{ }} do GitHub Actions, que colide com o template
+        # do scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
+        copyWithoutTemplating:
+          - .github/workflows/**
         values:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
