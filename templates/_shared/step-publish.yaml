@@ -5,3 +5,6 @@ input:
   description: ${{ parameters.description }}
   repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
   defaultBranch: main
+  # Conventional commit no commit inicial → semantic-release corta o primeiro
+  # release (tag) já no push da main, que então dispara o ci-tag.
+  gitCommitMessage: 'feat: scaffold ${{ parameters.name }} via Backstage'
