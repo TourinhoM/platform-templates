@@ -6,6 +6,6 @@ metadata:
   annotations:
     kyverno.io/endpoint: http://policy-reporter.policy-reporter.svc.cluster.local:8080
 spec:
-  type: policy-reporter
+  type: kubernetes-cluster
   owner: group:default/platform-engineering
   system: platform-lab
