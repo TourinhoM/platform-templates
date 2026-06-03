@@ -11,6 +11,9 @@ metadata:
 {%- if values.includeK8s %}
     backstage.io/kubernetes-id: ${{ values.name }}
     argocd/app-name: ${{ values.name }}
+    kyverno.io/namespace: ${{ values.name }}
+    kyverno.io/kind: Deployment,Pod
+    kyverno.io/resource-name: ${{ values.name }}
 {%- endif %}
   tags:
     - nodejs
@@ -27,6 +30,10 @@ spec:
   lifecycle: experimental
   owner: ${{ values.owner }}
   system: ${{ values.system }}
+{%- if values.includeK8s %}
+  dependsOn:
+    - resource:default/policy-reporter
+{%- endif %}
   # Relações surgem com o tempo — descomente e aponte quando existirem.
   # O auto-discovery reingere este arquivo sozinho a cada 30min.
   # dependsOn:

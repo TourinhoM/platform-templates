@@ -35,7 +35,6 @@ spec:
           enumNames:
             - Python
             - Quarkus
-          ui:widget: radio
         memory:
           title: Memória (MB)
           type: integer

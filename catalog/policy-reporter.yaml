@@ -1,0 +1,11 @@
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: policy-reporter
+  description: Endpoint da API REST do Policy Reporter (reports do Kyverno).
+  annotations:
+    kyverno.io/endpoint: http://policy-reporter.policy-reporter.svc.cluster.local:8080
+spec:
+  type: policy-reporter
+  owner: group:default/platform-engineering
+  system: platform-lab
