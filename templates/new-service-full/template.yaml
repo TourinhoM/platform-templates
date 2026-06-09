@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: new-service-full
-  title: New Service + Deploy (1+2)
-  description: Cria um novo serviço Fastify com CI, observabilidade e manifests k8s (kustomize + AppNamespace). Registra automaticamente no catalog.
+  title: New Service + Deploy (2 repos)
+  description: Cria um serviço Fastify (repo de código com CI + observabilidade) e um repo gitops-<nome> separado com os manifests k8s (kustomize + AppNamespace). Registra o serviço no catalog.
   tags:
     - nodejs
     - fastify
@@ -31,12 +31,17 @@ spec:
           type: string
           default: 2Gi
 
+  # Padrão de dois repos: o esqueleto de código vai pra ./code e o de deploy
+  # pra ./gitops no workspace; cada step-publish-* sobe só o seu sourcePath.
+  # Os steps publish/output são snippets compartilhados em _shared/ — quando
+  # outro template adotar o mesmo padrão, reusa os mesmos arquivos.
   steps:
-    - id: fetch-base
-      name: Montar esqueleto base
+    - id: fetch-code
+      name: Montar esqueleto do serviço
       action: fetch:template
       input:
         url: ../new-service/skeleton
+        targetPath: code
         # Workflows usam ${{ }} do GitHub Actions, que colide com o template
         # do scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
         copyWithoutTemplating:
@@ -46,23 +51,29 @@ spec:
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
           system: ${{ parameters.system }}
+          # Mantém as anotações de deploy (kubernetes-id, argocd, kyverno) no
+          # catalog-info do serviço, mesmo com os manifests no repo gitops.
           includeK8s: true
 
-    - id: fetch-k8s
-      name: Adicionar manifests k8s
+    - id: fetch-gitops
+      name: Montar esqueleto de deploy (gitops)
       action: fetch:template
       input:
-        url: ./skeleton/k8s
-        targetPath: k8s
+        url: ./skeleton-gitops
+        targetPath: gitops
+        copyWithoutTemplating:
+          - .github/workflows/**
         values:
           name: ${{ parameters.name }}
           teamName: ${{ parameters.teamName or parameters.name }}
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
 
-    - $yaml: ../_shared/step-publish.yaml
+    - $yaml: ../_shared/step-publish-code.yaml
+
+    - $yaml: ../_shared/step-publish-gitops.yaml
 
     - $yaml: ../_shared/step-register.yaml
 
   output:
-    $yaml: ../_shared/output.yaml
+    $yaml: ../_shared/output-gitops.yaml

@@ -1,0 +1,14 @@
+# CI do repo de deploy: só um smoke de `kustomize build`. Best-practices vivem
+# e são lintadas no platform-app-base, não aqui — assim PRs neste repo não
+# quebram com findings de estrutura que o time de infra não conserta aqui.
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    permissions:
+      contents: read
+    uses: TourinhoM/org-ci-platform/.github/workflows/ci-gitops.yml@main

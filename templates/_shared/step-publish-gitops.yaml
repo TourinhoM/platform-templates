@@ -1,0 +1,15 @@
+# Publica o repo de DEPLOY gitops-<nome> a partir do subdir ./gitops do workspace.
+# Pareia com step-publish-code.yaml no padrão de dois repos.
+# Contrato: o esqueleto de deploy foi fetchado com targetPath: gitops.
+#
+# O repo gitops não tem catalog-info próprio — o ArgoCD o descobre pelo prefixo
+# gitops- (ApplicationSet scaffolded-apps). Por isso não há step-register pra ele.
+id: publishGitops
+name: Criar repositório de deploy (gitops)
+action: publish:github
+input:
+  description: 'Deploy manifests (kustomize) de ${{ parameters.name }}'
+  repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ parameters.name }}
+  defaultBranch: main
+  sourcePath: gitops
+  gitCommitMessage: 'feat: scaffold gitops-${{ parameters.name }} via Backstage'

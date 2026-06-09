@@ -1,0 +1,11 @@
+# Output do padrão de dois repos: link pro repo de código, pro repo de deploy
+# (gitops) e pro Component no catalog. Pareia com step-publish-code/-gitops.
+# Single-repo? Use output.yaml.
+links:
+  - title: Repositório do serviço
+    url: ${{ steps.publish.output.remoteUrl }}
+  - title: Repositório de deploy (gitops)
+    url: ${{ steps.publishGitops.output.remoteUrl }}
+  - title: Ver no catalog
+    icon: catalog
+    entityRef: ${{ steps.register.output.entityRef }}

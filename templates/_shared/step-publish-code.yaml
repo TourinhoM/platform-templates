@@ -1,0 +1,15 @@
+# Publica o repo de CÓDIGO a partir do subdir ./code do workspace.
+# Pareia com step-publish-gitops.yaml no padrão de dois repos (código + deploy).
+# Contrato: o esqueleto do serviço foi fetchado com targetPath: code.
+# Single-repo? Use step-publish.yaml (publica a raiz do workspace).
+id: publish
+name: Criar repositório do serviço
+action: publish:github
+input:
+  description: ${{ parameters.description }}
+  repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
+  defaultBranch: main
+  sourcePath: code
+  # Conventional commit no commit inicial → semantic-release corta o primeiro
+  # release (tag) já no push da main, que então dispara o ci-tag.
+  gitCommitMessage: 'feat: scaffold ${{ parameters.name }} via Backstage'
