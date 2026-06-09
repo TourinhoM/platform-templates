@@ -68,7 +68,9 @@ spec:
       name: Montar esqueleto de deploy (gitops)
       action: fetch:template
       input:
-        url: ./skeleton-gitops
+        # Skeleton compartilhado em _skeletons/gitops — reusável por qualquer
+        # template que adote o padrão de 2 repos (não é dono do new-service-full).
+        url: ../_skeletons/gitops
         targetPath: gitops
         copyWithoutTemplating:
           - .github/workflows/**
