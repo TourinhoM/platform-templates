@@ -22,14 +22,22 @@ spec:
           title: Nome do time (AppNamespace)
           type: string
           description: Provisiona o namespace no cluster. Vazio = usa o nome do serviço.
-        cpuLimit:
-          title: CPU limit
+        profile:
+          title: Tamanho (profile)
           type: string
-          default: "2"
-        memoryLimit:
-          title: Memory limit
-          type: string
-          default: 2Gi
+          description: Dirige os resources do container E a quota do namespace. small cobre o caso comum.
+          enum:
+            - small
+            - medium
+            - large
+          # Rótulos amigáveis no dropdown — o dev vê o "hardware", o valor salvo
+          # continua small/medium/large. (Texto descritivo: se os números do
+          # cardápio mudarem nos size-* / na Composition, atualizar aqui também.)
+          enumNames:
+            - "small · pod até 200m CPU / 256Mi · namespace 1 CPU / 1Gi"
+            - "medium · pod até 1 CPU / 512Mi · namespace 4 CPU / 4Gi"
+            - "large · pod até 2 CPU / 1Gi · namespace 8 CPU / 8Gi"
+          default: small
         exposeHttp:
           title: Expõe HTTP? (Ingress + Certificate)
           type: boolean
@@ -77,8 +85,7 @@ spec:
         values:
           name: ${{ parameters.name }}
           teamName: ${{ parameters.teamName or parameters.name }}
-          cpuLimit: ${{ parameters.cpuLimit }}
-          memoryLimit: ${{ parameters.memoryLimit }}
+          profile: ${{ parameters.profile }}
           exposeHttp: ${{ parameters.exposeHttp }}
           autoscaling: ${{ parameters.autoscaling }}
 
