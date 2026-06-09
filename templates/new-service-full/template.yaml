@@ -30,6 +30,15 @@ spec:
           title: Memory limit
           type: string
           default: 2Gi
+        exposeHttp:
+          title: Expõe HTTP? (Ingress + Certificate)
+          type: boolean
+          description: Desmarque para microserviço interno (sem entrada HTTP externa).
+          default: true
+        autoscaling:
+          title: Autoscaling? (HPA + PDB)
+          type: boolean
+          default: false
 
   # Padrão de dois repos: o esqueleto de código vai pra ./code e o de deploy
   # pra ./gitops no workspace; cada step-publish-* sobe só o seu sourcePath.
@@ -68,6 +77,8 @@ spec:
           teamName: ${{ parameters.teamName or parameters.name }}
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
+          exposeHttp: ${{ parameters.exposeHttp }}
+          autoscaling: ${{ parameters.autoscaling }}
 
     - $yaml: ../_shared/step-publish-code.yaml
 

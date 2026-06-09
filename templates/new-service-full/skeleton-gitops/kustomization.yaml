@@ -1,15 +1,24 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# Compõe o golden path a partir dos fragments do platform-app-base.
+# workload + metrics sempre (comum a qualquer microserviço); http e
+# availability entram conforme as escolhas feitas no scaffolder.
 components:
-  - https://github.com/TourinhoM/platform-app-base//base?ref=main
+  - https://github.com/TourinhoM/platform-app-base//components/workload?ref=main
+  - https://github.com/TourinhoM/platform-app-base//components/metrics?ref=main
+{%- if values.exposeHttp %}
+  - https://github.com/TourinhoM/platform-app-base//components/http?ref=main
+{%- endif %}
+{%- if values.autoscaling %}
+  - https://github.com/TourinhoM/platform-app-base//components/availability?ref=main
+{%- endif %}
 
 resources:
   - claims/appnamespace.yaml
 
 # Label em metadata e no pod template (não nos selectors imutáveis) para o
 # plugin Kubernetes do Backstage descobrir os workloads E os pods via kubernetes-id.
-# includeTemplates propaga pro pod template; includeSelectors:false preserva o selector.
 labels:
   - pairs:
       backstage.io/kubernetes-id: ${{ values.name }}
@@ -23,7 +32,9 @@ configMapGenerator:
   - name: app-config
     literals:
       - name=${{ values.name }}
+{%- if values.exposeHttp %}
       - hostname=${{ values.name }}.local
+{%- endif %}
 
 images:
   - name: app-image
