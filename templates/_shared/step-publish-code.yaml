@@ -10,6 +10,9 @@ input:
   repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
   defaultBranch: main
   sourcePath: code
+  # Padrão da org: repos públicos (SARIF/Security tab, Rekor público, GHCR
+  # sem pull secret). O default do publish:github é private.
+  repoVisibility: public
   # Conventional commit no commit inicial → semantic-release corta o primeiro
   # release (tag) já no push da main, que então dispara o ci-tag.
   gitCommitMessage: 'feat: scaffold ${{ parameters.name }} via Backstage'

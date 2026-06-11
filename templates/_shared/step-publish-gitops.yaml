@@ -12,4 +12,6 @@ input:
   repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ parameters.name }}
   defaultBranch: main
   sourcePath: gitops
+  # Padrão da org: repos públicos (ver step-publish-code.yaml).
+  repoVisibility: public
   gitCommitMessage: 'feat: scaffold gitops-${{ parameters.name }} via Backstage'
