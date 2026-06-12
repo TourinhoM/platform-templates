@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node --require @opentelemetry/auto-instrumentations-node/register src/index.js",
-    "dev": "node --require @opentelemetry/auto-instrumentations-node/register --watch src/index.js"
+    "dev": "node --require @opentelemetry/auto-instrumentations-node/register --watch src/index.js",
+    "test": "node --test"
   },
   "dependencies": {
     "@opentelemetry/auto-instrumentations-node": "^0.75.0",
