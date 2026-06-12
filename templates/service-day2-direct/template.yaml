@@ -1,0 +1,74 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: service-day2-direct
+  title: Edit Service (day-2 · direto no gitops)
+  description: 'B′ do workload experiment: edita o App XR direto no repo gitops via PUSH — scaffolder tradicional (fetch + merge + push), sem CI e sem PR no caminho. Só pra serviços no engine xr.'
+  tags:
+    - day-2
+    - service
+    - experiment
+spec:
+  owner: group:default/platform-engineering
+  type: service
+
+  parameters:
+    - title: O que mudar
+      required: [component, size]
+      properties:
+        component:
+          title: Serviço
+          type: string
+          description: Serviço no engine xr (o gitops contém um App XR)
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: Component
+            defaultKind: Component
+            allowArbitraryValues: false
+        size:
+          title: Novo size
+          type: string
+          enum: [small, medium, large]
+          enumNames:
+            - 'small · pod até 200m CPU / 256Mi · namespace 1 CPU / 1Gi'
+            - 'medium · pod até 1 CPU / 512Mi · namespace 4 CPU / 4Gi'
+            - 'large · pod até 2 CPU / 1Gi · namespace 8 CPU / 8Gi'
+
+  # A tese do B′: o app.yaml do gitops JÁ é intenção (XR em linguagem de
+  # domínio), então o scaffolder edita e PUSHA direto — form = aprovação,
+  # admission do XRD = gate, Argo aplica. Sem service.yaml, sem renderer,
+  # sem dispatch, sem PR. Coerência resources↔quota continua garantida pela
+  # composition (deriva tudo de spec.size no reconcile).
+  # Atenção (registrar no experimento): utils:merge re-serializa o YAML —
+  # comentários do app.yaml (header GENERATED) se perdem no primeiro edit.
+  steps:
+    - id: fetch
+      name: Buscar gitops repo
+      action: fetch:plain
+      input:
+        url: https://github.com/tourinho-labs/gitops-${{ (parameters.component | parseEntityRef).name }}
+
+    - id: merge
+      name: Aplicar mudança no App XR
+      action: roadiehq:utils:merge
+      input:
+        path: app.yaml
+        content:
+          spec:
+            size: ${{ parameters.size }}
+
+    - id: push
+      name: Push direto no gitops repo
+      action: github:repo:push
+      input:
+        repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ (parameters.component | parseEntityRef).name }}
+        branch: main
+        gitCommitMessage: 'chore(day2): size=${{ parameters.size }} via Backstage (direto no XR)'
+
+  output:
+    links:
+      - title: Commit no gitops repo
+        url: https://github.com/tourinho-labs/gitops-${{ (parameters.component | parseEntityRef).name }}/commits/main
+      - title: Argo CD (sync em instantes)
+        url: https://argocd.local/applications/${{ (parameters.component | parseEntityRef).name }}

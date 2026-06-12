@@ -12,3 +12,4 @@ spec:
     - ./templates/new-service-combo/template.yaml
     - ./templates/lambda/template.yaml
     - ./templates/service-day2/template.yaml
+    - ./templates/service-day2-direct/template.yaml
