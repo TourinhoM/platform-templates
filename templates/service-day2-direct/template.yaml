@@ -2,12 +2,11 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: service-day2-direct
-  title: Edit Service (day-2 · direto no gitops)
-  description: 'B′ do workload experiment: edita o App XR direto no repo gitops via PUSH — scaffolder tradicional (fetch + merge + push), sem CI e sem PR no caminho. Só pra serviços no engine xr.'
+  title: Edit Service · size (day-2)
+  description: Muda o size de um serviço existente — commit direto no gitops repo (sem PR; form = aprovação). Atualiza resources do container E quota do namespace num commit atômico.
   tags:
     - day-2
     - service
-    - experiment
 spec:
   owner: group:default/platform-engineering
   type: service
@@ -19,7 +18,6 @@ spec:
         component:
           title: Serviço
           type: string
-          description: Serviço no engine xr (o gitops contém um App XR)
           ui:field: EntityPicker
           ui:options:
             catalogFilter:
@@ -35,13 +33,11 @@ spec:
             - 'medium · pod até 1 CPU / 512Mi · namespace 4 CPU / 4Gi'
             - 'large · pod até 2 CPU / 1Gi · namespace 8 CPU / 8Gi'
 
-  # A tese do B′: o app.yaml do gitops JÁ é intenção (XR em linguagem de
-  # domínio), então o scaffolder edita e PUSHA direto — form = aprovação,
-  # admission do XRD = gate, Argo aplica. Sem service.yaml, sem renderer,
-  # sem dispatch, sem PR. Coerência resources↔quota continua garantida pela
-  # composition (deriva tudo de spec.size no reconcile).
-  # Atenção (registrar no experimento): utils:merge re-serializa o YAML —
-  # comentários do app.yaml (header GENERATED) se perdem no primeiro edit.
+  # Edição in-place de alvos edit-friendly (formato máquina-estável): o size
+  # vive em 2 materializações no MESMO repo — component do kustomization
+  # (resources do container) e claim AppNamespace (quota) — e o commit
+  # atômico garante coerência. Sem PR e sem CI no caminho: form = aprovação,
+  # lint do gitops + quota do cluster = gates.
   steps:
     - id: fetch
       name: Buscar gitops repo
@@ -49,29 +45,30 @@ spec:
       input:
         url: https://github.com/tourinho-labs/gitops-${{ (parameters.component | parseEntityRef).name }}
 
-    - id: merge
-      name: Aplicar mudança no App XR
-      action: roadiehq:utils:merge
+    - id: edit
+      name: Aplicar novo size (container + quota)
+      action: roadiehq:utils:fs:replace
       input:
-        path: app.yaml
-        content:
-          spec:
-            size: ${{ parameters.size }}
+        files:
+          - file: kustomization.yaml
+            matchRegex: true
+            find: 'components/size-(small|medium|large)\?ref=main'
+            replaceWith: 'components/size-${{ parameters.size }}?ref=main'
+          - file: claims/appnamespace.yaml
+            matchRegex: true
+            find: 'size: (small|medium|large)'
+            replaceWith: 'size: ${{ parameters.size }}'
 
-    # platform:github:commit (action custom): o OSS não tem "commit em
-    # branch existente" — github:repo:push só semeia repo de história vazia
-    # (non-fast-forward em repo vivo, verificado empiricamente) e
-    # pull-request reintroduz aprovação humana. Commit via GraphQL
-    # createCommitOnBranch com expectedHeadOid (race-safe vs promoção de tag).
     - id: push
       name: Commit direto no gitops repo
       action: platform:github:commit
       input:
         repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ (parameters.component | parseEntityRef).name }}
         branch: main
-        message: 'chore(day2): size=${{ parameters.size }} via Backstage (direto no XR)'
+        message: 'chore(day2): size=${{ parameters.size }} via Backstage'
         files:
-          - app.yaml
+          - kustomization.yaml
+          - claims/appnamespace.yaml
 
   output:
     links:

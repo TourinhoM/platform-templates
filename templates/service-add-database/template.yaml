@@ -1,0 +1,82 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: service-add-database
+  title: Add PostgreSQL (day-2)
+  description: Provisiona um banco PostgreSQL pro serviço — produto aditivo (arquivo novo no gitops, workload intocado). O Secret de conexão (db-conn) liga sozinho no gancho envFrom do app-base e o Reloader rola o pod.
+  tags:
+    - day-2
+    - service
+    - database
+spec:
+  owner: group:default/platform-engineering
+  type: service
+
+  parameters:
+    - title: Qual serviço ganha o banco
+      required: [component]
+      properties:
+        component:
+          title: Serviço
+          type: string
+          description: O banco nasce no namespace do serviço, com Secret de conexão db-conn (chaves DATABASE_*)
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: Component
+            defaultKind: Component
+            allowArbitraryValues: false
+
+  # Modelo 3 (produtos): capability = ARQUIVO NOVO de claim, nunca edição do
+  # workload. db user/name derivados do nome do serviço (postgres não aceita
+  # hífen — vira underscore). O envFrom optional do app-base + Reloader fazem
+  # o resto: Secret aparece -> pod rola -> DATABASE_* no ambiente.
+  steps:
+    - id: fetch
+      name: Buscar gitops repo
+      action: fetch:plain
+      input:
+        url: https://github.com/tourinho-labs/gitops-${{ (parameters.component | parseEntityRef).name }}
+
+    - id: write
+      name: Criar claim do banco (produto aditivo)
+      action: roadiehq:utils:fs:write
+      input:
+        path: claims/appdatabase.yaml
+        content: |
+          apiVersion: platform.lab/v1alpha1
+          kind: AppDatabase
+          metadata:
+            name: ${{ (parameters.component | parseEntityRef).name }}
+            namespace: default
+          spec:
+            databaseName: ${{ (parameters.component | parseEntityRef).name | replace('-', '_') }}
+            appUser: ${{ (parameters.component | parseEntityRef).name | replace('-', '_') }}_user
+            appNamespace: ${{ (parameters.component | parseEntityRef).name }}
+
+    - id: register
+      name: Referenciar a claim no kustomization
+      action: roadiehq:utils:fs:replace
+      input:
+        files:
+          - file: kustomization.yaml
+            find: '  - claims/appnamespace.yaml'
+            replaceWith: "  - claims/appnamespace.yaml\n  - claims/appdatabase.yaml"
+
+    - id: push
+      name: Commit direto no gitops repo
+      action: platform:github:commit
+      input:
+        repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ (parameters.component | parseEntityRef).name }}
+        branch: main
+        message: 'feat(day2): add PostgreSQL via Backstage (claim AppDatabase)'
+        files:
+          - claims/appdatabase.yaml
+          - kustomization.yaml
+
+  output:
+    links:
+      - title: Commit no gitops repo
+        url: ${{ steps.push.output.commitUrl }}
+      - title: Argo CD (sync em instantes)
+        url: https://argocd.local/applications/${{ (parameters.component | parseEntityRef).name }}

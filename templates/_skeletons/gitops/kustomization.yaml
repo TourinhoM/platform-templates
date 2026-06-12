@@ -34,9 +34,15 @@ configMapGenerator:
   - name: app-config
     literals:
       - name=${{ values.name }}
-{%- if values.exposeHttp %}
+      # hostname sempre presente (inócuo sem Ingress): mata a condicional —
+      # ligar http no day-2 vira só o toggle do component, sem mexer aqui.
       - hostname=${{ values.name }}.local
-{%- endif %}
+  # env vars não-sensíveis moram em env.properties (arquivo plano): edição
+  # day-2 = append/merge de linha via Backstage, nunca mudança estrutural.
+  # O envFrom (optional) do app-base consome; Reloader rola o pod na mudança.
+  - name: app-env
+    envs:
+      - env.properties
 
 images:
   - name: app-image

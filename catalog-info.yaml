@@ -11,5 +11,5 @@ spec:
     - ./templates/new-service-full/template.yaml
     - ./templates/new-service-combo/template.yaml
     - ./templates/lambda/template.yaml
-    - ./templates/service-day2/template.yaml
     - ./templates/service-day2-direct/template.yaml
+    - ./templates/service-add-database/template.yaml
