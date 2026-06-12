@@ -58,17 +58,24 @@ spec:
           spec:
             size: ${{ parameters.size }}
 
+    # platform:github:commit (action custom): o OSS não tem "commit em
+    # branch existente" — github:repo:push só semeia repo de história vazia
+    # (non-fast-forward em repo vivo, verificado empiricamente) e
+    # pull-request reintroduz aprovação humana. Commit via GraphQL
+    # createCommitOnBranch com expectedHeadOid (race-safe vs promoção de tag).
     - id: push
-      name: Push direto no gitops repo
-      action: github:repo:push
+      name: Commit direto no gitops repo
+      action: platform:github:commit
       input:
         repoUrl: github.com?owner=tourinho-labs&repo=gitops-${{ (parameters.component | parseEntityRef).name }}
         branch: main
-        gitCommitMessage: 'chore(day2): size=${{ parameters.size }} via Backstage (direto no XR)'
+        message: 'chore(day2): size=${{ parameters.size }} via Backstage (direto no XR)'
+        files:
+          - app.yaml
 
   output:
     links:
       - title: Commit no gitops repo
-        url: https://github.com/tourinho-labs/gitops-${{ (parameters.component | parseEntityRef).name }}/commits/main
+        url: ${{ steps.push.output.commitUrl }}
       - title: Argo CD (sync em instantes)
         url: https://argocd.local/applications/${{ (parameters.component | parseEntityRef).name }}
