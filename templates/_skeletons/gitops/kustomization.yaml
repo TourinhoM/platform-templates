@@ -15,9 +15,15 @@ components:
 {%- if values.autoscaling %}
   - https://github.com/TourinhoM/platform-app-base//components/availability?ref=main
 {%- endif %}
+{%- if values.connectDatabase %}
+  - https://github.com/TourinhoM/platform-app-base//components/bindings/database?ref=main
+{%- endif %}
 
 resources:
   - claims/appnamespace.yaml
+{%- if values.connectDatabase %}
+  - externalsecret.yaml
+{%- endif %}
 
 # resources: o dev seta só a memória da app (editável ao nascer e no day-2). CPU
 # e os requests ficam fixos do workload base (plataforma). A cerca (min/max por

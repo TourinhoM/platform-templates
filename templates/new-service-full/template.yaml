@@ -2,8 +2,8 @@ apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
   name: new-service-full
-  title: New Service + Deploy (2 repos)
-  description: Cria um serviço Fastify (repo de código com CI + observabilidade) e um repo gitops-<nome> separado com os manifests k8s (kustomize + AppNamespace). Registra o serviço no catalog.
+  title: Microsserviço
+  description: Serviço HTTP pronto pra rodar — CI, observabilidade e deploy contínuo no cluster. Pode já nascer conectado a um banco existente.
   tags:
     - nodejs
     - fastify
@@ -36,6 +36,11 @@ spec:
         autoscaling:
           title: Autoscaling? (HPA + PDB)
           type: boolean
+          default: false
+        connectDatabase:
+          title: Integração com banco de dados
+          type: boolean
+          description: Conecta o serviço a um banco EXISTENTE (não cria banco). Pode ligar depois também.
           default: false
 
   # Padrão de dois repos: o esqueleto de código vai pra ./code e o de deploy
@@ -78,6 +83,30 @@ spec:
           memLimit: ${{ parameters.memLimit }}
           exposeHttp: ${{ parameters.exposeHttp }}
           autoscaling: ${{ parameters.autoscaling }}
+          connectDatabase: ${{ parameters.connectDatabase }}
+
+    # Integração com banco (opcional): deposita o ExternalSecret (db-conn) no
+    # gitops e preenche app/env. fetch:plain (verbatim) preserva o {{ }} do ESO;
+    # o binding components/bindings/database entra via condicional no kustomization.
+    - id: fetch-database
+      if: ${{ parameters.connectDatabase }}
+      name: Integração com banco de dados
+      action: fetch:plain
+      input:
+        url: ../_skeletons/capabilities/database
+        targetPath: gitops
+    - id: fill-database
+      if: ${{ parameters.connectDatabase }}
+      name: Preencher app/env do ExternalSecret
+      action: roadiehq:utils:fs:replace
+      input:
+        files:
+          - file: gitops/externalsecret.yaml
+            find: __APP__
+            replaceWith: ${{ parameters.name }}
+          - file: gitops/externalsecret.yaml
+            find: __ENV__
+            replaceWith: dev
 
     - $yaml: ../_shared/step-publish-code.yaml
 
