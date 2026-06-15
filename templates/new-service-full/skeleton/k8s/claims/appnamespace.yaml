@@ -1,9 +1,0 @@
-apiVersion: platform.lab/v1alpha1
-kind: AppNamespace
-metadata:
-  name: ${{ values.name }}
-  namespace: default
-spec:
-  teamName: ${{ values.teamName }}
-  cpuLimit: "${{ values.cpuLimit }}"
-  memoryLimit: ${{ values.memoryLimit }}
