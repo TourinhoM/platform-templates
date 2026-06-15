@@ -5,6 +5,5 @@ metadata:
   namespace: default
 spec:
   teamName: ${{ values.teamName }}
-  # Mesmo profile que dirige os resources do container (size-<profile> no
-  # kustomization) → aqui vira a ResourceQuota do namespace.
-  size: ${{ values.profile }}
+  # Quota e LimitRange do namespace são da plataforma (cerca), definidos na
+  # Composition AppNamespace — não mais por profile aqui.

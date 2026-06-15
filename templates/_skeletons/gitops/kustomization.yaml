@@ -2,13 +2,13 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 # Compõe o golden path a partir dos fragments do platform-app-base.
-# workload + metrics sempre (comum a qualquer microserviço); o size patcha os
-# resources do container conforme o profile (mesmo profile dirige a quota na
-# Claim AppNamespace); http e availability entram conforme o scaffolder.
+# workload + metrics sempre (comum a qualquer microserviço); os resources vêm de
+# um patch (default do scaffolder, o dev customiza ao nascer — sem profile fechado).
+# A cerca (min/max por container + quota do ns) vive no LimitRange/ResourceQuota
+# da Claim AppNamespace; http e availability entram conforme o scaffolder.
 components:
   - https://github.com/TourinhoM/platform-app-base//components/workload?ref=main
   - https://github.com/TourinhoM/platform-app-base//components/metrics?ref=main
-  - https://github.com/TourinhoM/platform-app-base//components/size-${{ values.profile }}?ref=main
 {%- if values.exposeHttp %}
   - https://github.com/TourinhoM/platform-app-base//components/http?ref=main
 {%- endif %}
@@ -18,6 +18,16 @@ components:
 
 resources:
   - claims/appnamespace.yaml
+
+# resources: o dev seta só a memória da app (editável ao nascer e no day-2). CPU
+# e os requests ficam fixos do workload base (plataforma). A cerca (min/max por
+# container + quota do ns) vive no LimitRange/ResourceQuota da AppNamespace.
+patches:
+  - target: { kind: Deployment }
+    patch: |
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: ${{ values.memLimit }}
 
 # Label em metadata e no pod template (não nos selectors imutáveis) para o
 # plugin Kubernetes do Backstage descobrir os workloads E os pods via kubernetes-id.
