@@ -9,7 +9,4 @@ spec:
     - ./catalog/policy-reporter.yaml
     - ./templates/new-service/template.yaml
     - ./templates/new-service-full/template.yaml
-    - ./templates/new-service-combo/template.yaml
     - ./templates/lambda/template.yaml
-    - ./templates/service-day2-direct/template.yaml
-    - ./templates/service-add-database/template.yaml
