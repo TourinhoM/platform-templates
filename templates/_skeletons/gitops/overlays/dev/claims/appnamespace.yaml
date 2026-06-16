@@ -1,0 +1,8 @@
+apiVersion: platform.lab/v1alpha1
+kind: AppNamespace
+metadata:
+  name: ${{ values.name }}-dev
+  namespace: default
+spec:
+  teamName: ${{ values.teamName }}
+  # Quota e LimitRange do ns são da plataforma (cerca), na Composition AppNamespace.

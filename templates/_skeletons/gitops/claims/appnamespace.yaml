@@ -1,9 +1,0 @@
-apiVersion: platform.lab/v1alpha1
-kind: AppNamespace
-metadata:
-  name: ${{ values.name }}
-  namespace: default
-spec:
-  teamName: ${{ values.teamName }}
-  # Quota e LimitRange do namespace são da plataforma (cerca), definidos na
-  # Composition AppNamespace — não mais por profile aqui.

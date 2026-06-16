@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# OVERLAY dev — só o que varia por ambiente. Herda tudo de ../../base.
+# O namespace (<app>-dev) vem do destination.namespace do ApplicationSet;
+# a claim AppNamespace (que CRIA o ns) fica em default.
+resources:
+  - ../../base
+  - claims/appnamespace.yaml
+{%- if values.connectDatabase %}
+  - externalsecret.yaml
+{%- endif %}
+
+# newTag por ambiente: a promoção (ci-tag) escreve aqui, por overlay — dev pode
+# estar à frente de prod. O renderer day-2 preserva o valor já promovido.
+images:
+  - name: app-image
+    newName: ghcr.io/tourinho-labs/${{ values.name }}
+    newTag: ${{ values.newTag or "latest" }}

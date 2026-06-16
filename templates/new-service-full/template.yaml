@@ -97,8 +97,12 @@ spec:
         # template que adote o padrão de 2 repos (não é dono do new-service-full).
         url: ../_skeletons/gitops
         targetPath: gitops
+        # Rende base/ + overlays/{dev,hml,prod}. Verbatim: workflows (${{ }} do
+        # Actions) e os ExternalSecrets dos overlays (preservam o {{ }} do ESO;
+        # o env já vem baked em cada overlay, só falta o __APP__).
         copyWithoutTemplating:
           - .github/workflows/**
+          - overlays/*/externalsecret.yaml
         values:
           name: ${{ parameters.name }}
           teamName: ${{ parameters.teamName or parameters.name }}
@@ -107,28 +111,35 @@ spec:
           autoscaling: ${{ parameters.autoscaling }}
           connectDatabase: ${{ parameters.connectDatabase }}
 
-    # Integração com banco (opcional): deposita o ExternalSecret (db-conn) no
-    # gitops e preenche app/env. fetch:plain (verbatim) preserva o {{ }} do ESO;
-    # o binding components/bindings/database entra via condicional no kustomization.
-    - id: fetch-database
-      if: ${{ parameters.connectDatabase }}
-      name: Integração com banco de dados
-      action: fetch:plain
-      input:
-        url: ../_skeletons/capabilities/database
-        targetPath: gitops
+    # Integração com banco (opcional): os ExternalSecrets já vêm nos overlays
+    # (env baked, db-conn). Com banco → preenche o __APP__ nos 3; sem banco →
+    # remove os 3 (o kustomization de cada overlay já não os referencia via
+    # condicional, mas tirar o arquivo evita órfão no git). Mesma lógica que o
+    # renderer day-2 faz (subtrativo), pra day-1 e day-2 convergirem.
     - id: fill-database
       if: ${{ parameters.connectDatabase }}
-      name: Preencher app/env do ExternalSecret
+      name: Preencher app do ExternalSecret (por overlay)
       action: roadiehq:utils:fs:replace
       input:
         files:
-          - file: gitops/externalsecret.yaml
+          - file: gitops/overlays/dev/externalsecret.yaml
             find: __APP__
             replaceWith: ${{ parameters.name }}
-          - file: gitops/externalsecret.yaml
-            find: __ENV__
-            replaceWith: dev
+          - file: gitops/overlays/hml/externalsecret.yaml
+            find: __APP__
+            replaceWith: ${{ parameters.name }}
+          - file: gitops/overlays/prod/externalsecret.yaml
+            find: __APP__
+            replaceWith: ${{ parameters.name }}
+    - id: drop-database
+      if: ${{ not parameters.connectDatabase }}
+      name: Remover ExternalSecrets (sem banco)
+      action: roadiehq:utils:fs:delete
+      input:
+        files:
+          - gitops/overlays/dev/externalsecret.yaml
+          - gitops/overlays/hml/externalsecret.yaml
+          - gitops/overlays/prod/externalsecret.yaml
 
     - $yaml: ../_shared/step-publish-code.yaml
 
