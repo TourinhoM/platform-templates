@@ -63,4 +63,6 @@ configMapGenerator:
 images:
   - name: app-image
     newName: ghcr.io/tourinho-labs/${{ values.name }}
-    newTag: latest
+    # newTag é da promoção (ci-tag escreve direto no gitops). Day-1 = latest;
+    # o renderer de day-2 preserva o valor já promovido em vez de resetar.
+    newTag: ${{ values.newTag or "latest" }}
