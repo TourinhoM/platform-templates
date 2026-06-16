@@ -67,6 +67,28 @@ spec:
           # catalog-info do serviço, mesmo com os manifests no repo gitops.
           includeK8s: true
 
+    # platform.yaml (SSOT) + callers de CI do day-2, no repo de CÓDIGO. Skeleton
+    # separado (não o de código compartilhado) porque só o Microsserviço tem
+    # gitops repo — o new-service standalone não pode receber render.yml.
+    # platform.yaml é templatizado dos toggles; os workflows vão verbatim
+    # (têm ${{ }} de GitHub Actions). Day-1 e day-2 ficam consistentes porque o
+    # renderer lê esses mesmos valores de volta.
+    - id: fetch-platform-intent
+      name: Emitir platform.yaml + CI day-2
+      action: fetch:template
+      input:
+        url: ../_skeletons/platform-intent
+        targetPath: code
+        copyWithoutTemplating:
+          - .github/workflows/**
+        values:
+          name: ${{ parameters.name }}
+          team: ${{ parameters.teamName }}
+          memLimit: ${{ parameters.memLimit }}
+          exposeHttp: ${{ parameters.exposeHttp }}
+          autoscaling: ${{ parameters.autoscaling }}
+          connectDatabase: ${{ parameters.connectDatabase }}
+
     - id: fetch-gitops
       name: Montar esqueleto de deploy (gitops)
       action: fetch:template

@@ -1,0 +1,14 @@
+# platform.yaml — contrato com a plataforma (fonte única da verdade do deploy).
+# Edite AQUI e dê push: o CI re-renderiza o repo gitops-${{ values.name }}
+# automaticamente (day-2). Você NUNCA edita o repo gitops à mão.
+#
+# Campos e defaults: contrato platform-definition v0 (org-ci-platform). Campo
+# omitido cai no default — pode apagar o que não quiser fixar.
+name: ${{ values.name }}
+{%- if values.team %}
+team: ${{ values.team }}
+{%- endif %}
+http: ${{ values.exposeHttp }}
+autoscaling: ${{ values.autoscaling }}
+memory: ${{ values.memLimit }}
+database: ${{ values.connectDatabase }}

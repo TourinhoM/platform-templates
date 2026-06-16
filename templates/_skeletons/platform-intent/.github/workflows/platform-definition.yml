@@ -1,0 +1,20 @@
+name: Platform Definition
+
+# Valida o contrato (platform.yaml) no PR antes do merge — intenção inválida
+# não chega a renderizar o gitops.
+#
+# ⚠️ Se este check virar REQUIRED na branch protection, remova o filtro de
+# paths: required check que não dispara (PR sem mudança no platform.yaml) trava
+# o merge pra sempre. Sem filtro, a action no-opa verde em segundos.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - platform.yaml
+
+jobs:
+  validate:
+    permissions:
+      contents: read
+    uses: TourinhoM/org-ci-platform/.github/workflows/service-definition.yml@main

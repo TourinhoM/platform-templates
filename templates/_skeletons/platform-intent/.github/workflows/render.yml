@@ -1,0 +1,22 @@
+name: Render GitOps
+
+# Day-2: editar o platform.yaml e dar push re-renderiza o repo gitops-<app>.
+# Push de código não paga render — a imagem chega no gitops pela promoção do
+# ci-tag, não por aqui. O dev nunca edita o gitops à mão.
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - platform.yaml
+
+jobs:
+  render:
+    permissions:
+      contents: read
+    # Reusable está em outra org (TourinhoM): secrets EXPLÍCITO — `inherit` não
+    # atravessa org (chega vazio). Necessário pra escrita cross-repo (RELEASE_APP)
+    # no gitops-<app>.
+    uses: TourinhoM/org-ci-platform/.github/workflows/render-gitops.yml@main
+    secrets:
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
