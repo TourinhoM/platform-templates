@@ -134,7 +134,8 @@ spec:
     - id: drop-database
       if: ${{ not parameters.connectDatabase }}
       name: Remover ExternalSecrets (sem banco)
-      action: roadiehq:utils:fs:delete
+      # fs:delete é built-in do scaffolder — o roadiehq:utils não tem delete.
+      action: fs:delete
       input:
         files:
           - gitops/overlays/dev/externalsecret.yaml
