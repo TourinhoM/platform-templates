@@ -67,16 +67,25 @@ spec:
     # (render-gitops, mesmo render.js, defaults herdados do schema.json) é o
     # ÚNICO que materializa base/ + overlays/dev + stages/{hml,prod}. Assim os
     # defaults moram num lugar só (o contrato) — sem constantes duplicadas aqui
-    # que poderiam driftar do schema. O day-1 só cria o repo com um README; o
-    # primeiro push de platform.yaml dispara o render que popula o resto.
-    # (Como o banco nasce off por default, também não há nada de DB pra remover
-    # aqui — o render day-2 só emite os artefatos de banco quando database:true.)
+    # que poderiam driftar do schema. O day-1 cria o repo com README + o CI do
+    # gitops (.github/workflows/ci.yml); o primeiro push de platform.yaml dispara
+    # o render que popula o resto.
+    # POR QUE o workflow nasce aqui (e não no render): o render-gitops escreve com
+    # o token do RELEASE_APP, que NÃO tem (nem deve ter) permissão `workflows` —
+    # um token que só renderiza manifesto não pode reescrever CI. O Backstage (que
+    # já cria workflows no repo de código) provisiona o ci.yml do gitops uma vez;
+    # o render nunca toca em .github/workflows. copyWithoutTemplating porque
+    # workflow tem ${{ }} de Actions que colide com o scaffolder.
+    # (Banco nasce off por default → nada de DB pra remover aqui; o render day-2
+    # só emite os artefatos de banco quando database:true.)
     - id: fetch-gitops-bootstrap
       name: Bootstrap do repo de deploy (gitops)
       action: fetch:template
       input:
         url: ../_skeletons/gitops-bootstrap
         targetPath: gitops
+        copyWithoutTemplating:
+          - .github/workflows/**
         values:
           name: ${{ parameters.name }}
 
