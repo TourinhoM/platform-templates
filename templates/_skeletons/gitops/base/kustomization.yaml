@@ -46,6 +46,11 @@ configMapGenerator:
       # hostname sempre presente (inócuo sem Ingress): ligar http no day-2 vira
       # só o toggle do component, sem mexer aqui.
       - hostname=${{ values.name }}.local
+      # paths das probes: source dos replacements do workload base → httpGet.path
+      # do Deployment. Default /health; override só se o app declarar health.* no
+      # platform.yaml (ex.: Quarkus). Convenção segura por construção, sem patch cru.
+      - healthReadiness=${{ values.healthReadiness }}
+      - healthLiveness=${{ values.healthLiveness }}
   # env vars não-sensíveis em env.properties (arquivo plano). Mudança = novo hash
   # do app-env → Argo rola o pod nativamente (sem Reloader). Segredos NUNCA aqui.
   - name: app-env
