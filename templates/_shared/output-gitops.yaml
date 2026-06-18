@@ -6,6 +6,9 @@ links:
     url: ${{ steps.publish.output.remoteUrl }}
   - title: Repositório de deploy (gitops)
     url: ${{ steps.publishGitops.output.remoteUrl }}
+  # Sem catalog:register no scaffolder — o auto-discovery (GithubEntityProvider)
+  # é o dono do registro. O link resolve quando o próximo scan importar o
+  # catalog-info.yaml (até lá, 404 transitório).
   - title: Ver no catalog
     icon: catalog
-    entityRef: ${{ steps.register.output.entityRef }}
+    entityRef: component:default/${{ parameters.name }}

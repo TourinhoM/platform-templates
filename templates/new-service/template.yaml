@@ -34,7 +34,8 @@ spec:
 
     - $yaml: ../_shared/step-publish.yaml
 
-    - $yaml: ../_shared/step-register.yaml
+    # Sem catalog:register: auto-discovery (GithubEntityProvider) é o dono do
+    # registro no catálogo — register explícito colidia (409 em re-scaffold).
 
   output:
     $yaml: ../_shared/output.yaml

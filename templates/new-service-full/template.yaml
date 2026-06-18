@@ -93,7 +93,10 @@ spec:
 
     - $yaml: ../_shared/step-publish-gitops.yaml
 
-    - $yaml: ../_shared/step-register.yaml
+    # Sem catalog:register: o auto-discovery (GithubEntityProvider varre
+    # tourinho-labs) é o dono do registro no catálogo. Register explícito aqui
+    # colidia com o discovery (409 Conflict em re-scaffold) — discovery é
+    # idempotente. Trade-off: a app aparece no catálogo só no próximo scan.
 
   output:
     $yaml: ../_shared/output-gitops.yaml
