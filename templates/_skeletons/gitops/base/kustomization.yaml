@@ -19,15 +19,6 @@ components:
   - https://github.com/TourinhoM/platform-app-base//components/bindings/database?ref=main
 {%- endif %}
 
-# resources: o dev seta só a memória (mesma nos 3 envs por ora; override per-env é
-# incremento futuro do platform.yaml). CPU/requests fixos do workload base.
-patches:
-  - target: { kind: Deployment }
-    patch: |
-      - op: replace
-        path: /spec/template/spec/containers/0/resources/limits/memory
-        value: ${{ values.memLimit }}
-
 # Label p/ o plugin Kubernetes do Backstage descobrir os workloads dos 3 envs
 # (mesmo kubernetes-id → o componente mostra dev/hml/prod juntos).
 labels:
@@ -51,6 +42,10 @@ configMapGenerator:
       # platform.yaml (ex.: Quarkus). Convenção segura por construção, sem patch cru.
       - healthReadiness=${{ values.healthReadiness }}
       - healthLiveness=${{ values.healthLiveness }}
+      # memLimit: source do replacement do workload base → resources.limits.memory.
+      # O dev seta só a memória (mesma nos 3 envs por ora); CPU/requests = piso fixo
+      # do workload base. Override sempre via campo tipado → replacement, sem patch.
+      - memLimit=${{ values.memLimit }}
   # env vars não-sensíveis em env.properties (arquivo plano). Mudança = novo hash
   # do app-env → Argo rola o pod nativamente (sem Reloader). Segredos NUNCA aqui.
   - name: app-env
