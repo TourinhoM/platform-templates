@@ -48,9 +48,10 @@ spec:
     # separado (não o de código compartilhado) porque só o Microsserviço tem
     # gitops repo — o new-service standalone não pode receber render.yml.
     # platform.yaml nasce MÍNIMO (só name): todo o resto cai nos defaults do
-    # contrato (tudo on menos banco). Os workflows vão verbatim (${{ }} do
-    # Actions). Day-1 e day-2 convergem porque o renderer aplica os MESMOS
-    # defaults que o day-1 usa abaixo como constantes.
+    # contrato (tudo on menos banco), aplicados pelo renderer day-2 a partir do
+    # schema.json. Os workflows vão verbatim (${{ }} do Actions). Não há mais
+    # constantes de deploy no day-1 — o gitops é materializado só no day-2,
+    # então não há como o day-1 driftar do schema (fonte única dos defaults).
     - id: fetch-platform-intent
       name: Emitir platform.yaml + CI day-2
       action: fetch:template
@@ -62,52 +63,22 @@ spec:
         values:
           name: ${{ parameters.name }}
 
-    - id: fetch-gitops
-      name: Montar esqueleto de deploy (gitops)
+    # O CONTEÚDO do gitops NÃO é renderizado no day-1. O renderer day-2
+    # (render-gitops, mesmo render.js, defaults herdados do schema.json) é o
+    # ÚNICO que materializa base/ + overlays/dev + stages/{hml,prod}. Assim os
+    # defaults moram num lugar só (o contrato) — sem constantes duplicadas aqui
+    # que poderiam driftar do schema. O day-1 só cria o repo com um README; o
+    # primeiro push de platform.yaml dispara o render que popula o resto.
+    # (Como o banco nasce off por default, também não há nada de DB pra remover
+    # aqui — o render day-2 só emite os artefatos de banco quando database:true.)
+    - id: fetch-gitops-bootstrap
+      name: Bootstrap do repo de deploy (gitops)
       action: fetch:template
       input:
-        # Skeleton compartilhado em _skeletons/gitops — reusável por qualquer
-        # template que adote o padrão de 2 repos (não é dono do new-service-full).
-        url: ../_skeletons/gitops
+        url: ../_skeletons/gitops-bootstrap
         targetPath: gitops
-        # Rende base/ + overlays/{dev,hml,prod}. Verbatim: workflows (${{ }} do
-        # Actions) e os ExternalSecrets dos overlays (preservam o {{ }} do ESO;
-        # o env já vem baked em cada overlay, só falta o __APP__).
-        copyWithoutTemplating:
-          - .github/workflows/**
-          - overlays/*/externalsecret.yaml
-        # Defaults do contrato como CONSTANTES no day-1 (não vêm mais do form):
-        # tudo on (http + autoscaling), banco off. Têm que bater 1:1 com os
-        # defaults do schema.json que o renderer day-2 aplica, senão o primeiro
-        # push re-renderiza e gera drift.
         values:
           name: ${{ parameters.name }}
-          teamName: ${{ parameters.name }}
-          memLimit: 256Mi
-          exposeHttp: true
-          autoscaling: true
-          connectDatabase: false
-
-    # O serviço NASCE sem banco (database é opt-in no day-2). Os ExternalSecrets
-    # vêm no skeleton dos overlays como gabarito (env baked, __APP__), então no
-    # day-1 a gente sempre os remove pra não deixar órfão no git. Quando o dev
-    # liga `database: true` no platform.yaml, é o renderer day-2 que recria os 3
-    # ExternalSecrets + o binding + a claim de provisionamento (mesma lógica
-    # subtrativa, agora do lado do renderer).
-    - id: drop-database
-      name: Remover artefatos de banco (opt-in no day-2)
-      # fs:delete é built-in do scaffolder — o roadiehq:utils não tem delete.
-      # Remove ExternalSecret + claim AppDatabase dos 3 overlays (banco nasce off;
-      # o renderer day-2 recria ambos quando o dev liga `database: true`).
-      action: fs:delete
-      input:
-        files:
-          - gitops/overlays/dev/externalsecret.yaml
-          - gitops/overlays/hml/externalsecret.yaml
-          - gitops/overlays/prod/externalsecret.yaml
-          - gitops/overlays/dev/claims/appdatabase.yaml
-          - gitops/overlays/hml/claims/appdatabase.yaml
-          - gitops/overlays/prod/claims/appdatabase.yaml
 
     - $yaml: ../_shared/step-publish-code.yaml
 
