@@ -1,0 +1,13 @@
+# Capability DATABASE — claim de provisionamento (par do ExternalSecret db-conn).
+# Day-2: nasce quando o dev declara `database: true` no platform.yaml; o renderer
+# recria os 3 (um por env). A Composition (platform-apis) cria user+db no postgres
+# compartilhado e PUBLICA a conexão no Vault (secret/databases/prod/<app>) — é de
+# lá que o ExternalSecret materializa o db-conn. O dev NÃO escreve isto à mão.
+apiVersion: platform.lab/v1alpha1
+kind: AppDatabase
+metadata:
+  name: ${{ values.name }}-prod
+  namespace: default
+spec:
+  appName: ${{ values.name }}
+  env: prod

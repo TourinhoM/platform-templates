@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: new-service-full
   title: Microsserviço
-  description: Serviço HTTP pronto pra rodar — CI, observabilidade e deploy contínuo no cluster. Pode já nascer conectado a um banco existente.
+  description: Serviço HTTP pronto pra rodar — CI, observabilidade e deploy contínuo no cluster. Nasce completo (HTTP, autoscaling, observabilidade); banco é opt-in editando o platform.yaml.
   tags:
     - nodejs
     - fastify
@@ -13,35 +13,12 @@ spec:
   owner: group:default/platform-engineering
   type: service
 
+  # Form pergunta só identidade (name/description/system). Os knobs de deploy
+  # NÃO moram no Backstage de propósito: o serviço nasce com os defaults do
+  # contrato (tudo ligado menos banco) e o dev edita o platform.yaml no day-2 se
+  # quiser mudar — superfície única, sem seleção que ninguém revisa no scaffold.
   parameters:
     - $yaml: ../_shared/params-service.yaml
-
-    - title: Deploy (opcional — tem defaults)
-      properties:
-        teamName:
-          title: Nome do time (AppNamespace)
-          type: string
-          description: Provisiona o namespace no cluster. Vazio = usa o nome do serviço.
-        # Memória da app — o resto dos resources (CPU, requests) é fixo da
-        # plataforma. Default cobre o caso comum; editável ao nascer e no day-2.
-        memLimit:
-          title: Memória
-          type: string
-          default: 256Mi
-        exposeHttp:
-          title: Expõe HTTP? (Ingress + Certificate)
-          type: boolean
-          description: Desmarque para microserviço interno (sem entrada HTTP externa).
-          default: true
-        autoscaling:
-          title: Autoscaling? (HPA + PDB)
-          type: boolean
-          default: false
-        connectDatabase:
-          title: Integração com banco de dados
-          type: boolean
-          description: Conecta o serviço a um banco EXISTENTE (não cria banco). Pode ligar depois também.
-          default: false
 
   # Padrão de dois repos: o esqueleto de código vai pra ./code e o de deploy
   # pra ./gitops no workspace; cada step-publish-* sobe só o seu sourcePath.
@@ -70,9 +47,10 @@ spec:
     # platform.yaml (SSOT) + callers de CI do day-2, no repo de CÓDIGO. Skeleton
     # separado (não o de código compartilhado) porque só o Microsserviço tem
     # gitops repo — o new-service standalone não pode receber render.yml.
-    # platform.yaml é templatizado dos toggles; os workflows vão verbatim
-    # (têm ${{ }} de GitHub Actions). Day-1 e day-2 ficam consistentes porque o
-    # renderer lê esses mesmos valores de volta.
+    # platform.yaml nasce MÍNIMO (só name): todo o resto cai nos defaults do
+    # contrato (tudo on menos banco). Os workflows vão verbatim (${{ }} do
+    # Actions). Day-1 e day-2 convergem porque o renderer aplica os MESMOS
+    # defaults que o day-1 usa abaixo como constantes.
     - id: fetch-platform-intent
       name: Emitir platform.yaml + CI day-2
       action: fetch:template
@@ -83,11 +61,6 @@ spec:
           - .github/workflows/**
         values:
           name: ${{ parameters.name }}
-          team: ${{ parameters.teamName }}
-          memLimit: ${{ parameters.memLimit }}
-          exposeHttp: ${{ parameters.exposeHttp }}
-          autoscaling: ${{ parameters.autoscaling }}
-          connectDatabase: ${{ parameters.connectDatabase }}
 
     - id: fetch-gitops
       name: Montar esqueleto de deploy (gitops)
@@ -103,44 +76,38 @@ spec:
         copyWithoutTemplating:
           - .github/workflows/**
           - overlays/*/externalsecret.yaml
+        # Defaults do contrato como CONSTANTES no day-1 (não vêm mais do form):
+        # tudo on (http + autoscaling), banco off. Têm que bater 1:1 com os
+        # defaults do schema.json que o renderer day-2 aplica, senão o primeiro
+        # push re-renderiza e gera drift.
         values:
           name: ${{ parameters.name }}
-          teamName: ${{ parameters.teamName or parameters.name }}
-          memLimit: ${{ parameters.memLimit }}
-          exposeHttp: ${{ parameters.exposeHttp }}
-          autoscaling: ${{ parameters.autoscaling }}
-          connectDatabase: ${{ parameters.connectDatabase }}
+          teamName: ${{ parameters.name }}
+          memLimit: 256Mi
+          exposeHttp: true
+          autoscaling: true
+          connectDatabase: false
 
-    # Integração com banco (opcional): os ExternalSecrets já vêm nos overlays
-    # (env baked, db-conn). Com banco → preenche o __APP__ nos 3; sem banco →
-    # remove os 3 (o kustomization de cada overlay já não os referencia via
-    # condicional, mas tirar o arquivo evita órfão no git). Mesma lógica que o
-    # renderer day-2 faz (subtrativo), pra day-1 e day-2 convergirem.
-    - id: fill-database
-      if: ${{ parameters.connectDatabase }}
-      name: Preencher app do ExternalSecret (por overlay)
-      action: roadiehq:utils:fs:replace
-      input:
-        files:
-          - file: gitops/overlays/dev/externalsecret.yaml
-            find: __APP__
-            replaceWith: ${{ parameters.name }}
-          - file: gitops/overlays/hml/externalsecret.yaml
-            find: __APP__
-            replaceWith: ${{ parameters.name }}
-          - file: gitops/overlays/prod/externalsecret.yaml
-            find: __APP__
-            replaceWith: ${{ parameters.name }}
+    # O serviço NASCE sem banco (database é opt-in no day-2). Os ExternalSecrets
+    # vêm no skeleton dos overlays como gabarito (env baked, __APP__), então no
+    # day-1 a gente sempre os remove pra não deixar órfão no git. Quando o dev
+    # liga `database: true` no platform.yaml, é o renderer day-2 que recria os 3
+    # ExternalSecrets + o binding + a claim de provisionamento (mesma lógica
+    # subtrativa, agora do lado do renderer).
     - id: drop-database
-      if: ${{ not parameters.connectDatabase }}
-      name: Remover ExternalSecrets (sem banco)
+      name: Remover artefatos de banco (opt-in no day-2)
       # fs:delete é built-in do scaffolder — o roadiehq:utils não tem delete.
+      # Remove ExternalSecret + claim AppDatabase dos 3 overlays (banco nasce off;
+      # o renderer day-2 recria ambos quando o dev liga `database: true`).
       action: fs:delete
       input:
         files:
           - gitops/overlays/dev/externalsecret.yaml
           - gitops/overlays/hml/externalsecret.yaml
           - gitops/overlays/prod/externalsecret.yaml
+          - gitops/overlays/dev/claims/appdatabase.yaml
+          - gitops/overlays/hml/claims/appdatabase.yaml
+          - gitops/overlays/prod/claims/appdatabase.yaml
 
     - $yaml: ../_shared/step-publish-code.yaml
 

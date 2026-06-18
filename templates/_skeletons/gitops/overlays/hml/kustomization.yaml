@@ -8,6 +8,7 @@ resources:
   - ../../base
   - claims/appnamespace.yaml
 {%- if values.connectDatabase %}
+  - claims/appdatabase.yaml
   - externalsecret.yaml
 {%- endif %}
 
