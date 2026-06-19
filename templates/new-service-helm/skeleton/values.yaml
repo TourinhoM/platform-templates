@@ -5,4 +5,6 @@ ${{ values.archetype }}:
   # Derivado do system no scaffold; ajuste pro squad dono no day-2.
   team: ${{ values.system }}
   system: ${{ values.system }}
-  image: ghcr.io/tourinho-labs/${{ values.name }}:0.1.0
+  # Imagem publicada pelo CI do repo de código (semantic-release: 1º release = 1.0.0).
+  # Renovate (datasource docker) bumpa este tag conforme o CI publica versões novas.
+  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0

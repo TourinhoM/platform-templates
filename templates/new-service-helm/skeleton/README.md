@@ -2,8 +2,11 @@
 
 ${{ values.description }}
 
-Deploy do app **consumindo o arquétipo Helm central `${{ values.archetype }}@2.0.0`**
-(`oci://ghcr.io/tourinhom/charts`) — por versão, sem copiar o chart.
+Repo de **deploy** (gitops) do `${{ values.name }}` — par do repo de **código**
+`tourinho-labs/${{ values.name }}` (Fastify + CI que builda a imagem). Aqui o app
+é deployado **consumindo o arquétipo Helm central `${{ values.archetype }}@2.0.0`**
+(`oci://ghcr.io/tourinhom/charts`) — por versão, sem copiar o chart, com a `image`
+apontando pro que o CI do repo de código publica.
 
 ## Como funciona
 

@@ -3,7 +3,7 @@ kind: Template
 metadata:
   name: new-service-helm
   title: Microsserviço (Helm)
-  description: App que consome um arquétipo Helm central POR VERSÃO (oci://ghcr.io/tourinhom/charts). Nasce com um consumer chart fino + Argo Application + Renovate pra bumpar a versão do arquétipo.
+  description: Serviço HTTP que consome um arquétipo Helm central POR VERSÃO (oci://ghcr.io/tourinhom/charts). Cria dois repos — código (Fastify + CI que builda a imagem) e deploy (consumer chart fino + Argo Application + Renovate pra bumpar o arquétipo).
   tags:
     - helm
     - service
@@ -35,13 +35,50 @@ spec:
             - Frontend — nginx (configmap próprio)
             - Batch — CronJob (sem Service/probe)
 
-  # Auto-contido (sem repo de código): só o repo de DEPLOY gitops-<nome> com o
-  # consumer chart. Argo autodetecta o Chart.yaml -> Helm, puxa o arquétipo do
-  # OCI e renderiza. Renovate (helm manager) abre PR quando sai versão nova do
-  # arquétipo — atualização central via pin-por-versão, sem copiar o chart.
+  # Padrão de dois repos (igual ao new-service-full): código em ./code e deploy
+  # em ./gitops; cada step-publish-* sobe só o seu sourcePath.
+  #  - CÓDIGO (tourinho-labs/<nome>): esqueleto Fastify + CI que builda e publica
+  #    ghcr.io/tourinho-labs/<nome> (mesmo skeleton/CI do new-service-full).
+  #  - DEPLOY (gitops-<nome>): consumer chart fino — Argo autodetecta Chart.yaml
+  #    -> Helm, puxa o arquétipo do OCI por versão e renderiza, com a image
+  #    apontando pro que o CI do repo de código publica. Renovate bumpa o
+  #    arquétipo (pin-por-versão, sem copiar o chart).
   steps:
-    - id: fetch
-      name: Montar consumer chart
+    - id: fetch-code
+      name: Montar esqueleto do serviço
+      action: fetch:template
+      input:
+        url: ../new-service/skeleton
+        targetPath: code
+        # Workflows usam ${{ }} do GitHub Actions, que colide com o template do
+        # scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
+        copyWithoutTemplating:
+          - .github/workflows/**
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ user.ref }}
+          system: ${{ parameters.system }}
+          # Mantém as anotações de deploy (kubernetes-id, argocd) no catalog-info
+          # do serviço — é o que o auto-discovery registra no catálogo.
+          includeK8s: true
+
+    # Overlay de UM arquivo: troca o caller ci-tag.yml pra apontar no
+    # ci-tag-helm.yml (promoção edita values.yaml, não kustomization.yaml).
+    # Reusa todo o resto do skeleton de código compartilhado.
+    - id: fetch-code-helm-ci
+      name: Caller de CI Helm (override do ci-tag)
+      action: fetch:template
+      input:
+        url: ./skeleton-code
+        targetPath: code
+        copyWithoutTemplating:
+          - .github/workflows/**
+        values:
+          name: ${{ parameters.name }}
+
+    - id: fetch-gitops
+      name: Montar consumer chart (deploy)
       action: fetch:template
       input:
         url: ./skeleton
@@ -53,16 +90,14 @@ spec:
           system: ${{ parameters.system }}
           archetype: ${{ parameters.archetype }}
 
+    - $yaml: ../_shared/step-publish-code.yaml
     - $yaml: ../_shared/step-publish-gitops.yaml
 
     # Sem catalog:register: auto-discovery (GithubEntityProvider varre
     # tourinho-labs) é o dono do registro — register explícito dava 409 em
-    # re-scaffold. A app aparece no catálogo no próximo scan.
+    # re-scaffold. A app aparece no catálogo no próximo scan (via catalog-info
+    # do repo de código).
 
-  # Output de UM repo (gitops). O output-gitops.yaml compartilhado linka dois
-  # repos (código + deploy) e referencia steps.publish, que aqui não existe —
-  # por isso o link único é inline.
+  # Dois repos (código + deploy) — reusa o output compartilhado de dois repos.
   output:
-    links:
-      - title: Repositório de deploy (gitops)
-        url: ${{ steps.publishGitops.output.remoteUrl }}
+    $yaml: ../_shared/output-gitops.yaml
