@@ -1,0 +1,8 @@
+# Só o ESPECÍFICO do app; todo o resto vem de ${{ values.archetype }}@2.0.0.
+# Os valores entram sob a chave do arquétipo (nome do subchart).
+${{ values.archetype }}:
+  # team é required no arquétipo (governança — antídoto ao "indefinido").
+  # Derivado do system no scaffold; ajuste pro squad dono no day-2.
+  team: ${{ values.system }}
+  system: ${{ values.system }}
+  image: ghcr.io/tourinho-labs/${{ values.name }}:0.1.0

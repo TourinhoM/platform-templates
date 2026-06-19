@@ -1,0 +1,26 @@
+# Registro auto-contido no Argo. Source aponta pro próprio repo; o Argo
+# autodetecta o Chart.yaml -> Helm, resolve a dep do arquétipo no OCI e
+# renderiza. Fica em argocd/ (fora do que o Helm empacota) pra não virar
+# template do chart.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${{ values.name }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tourinho-labs/gitops-${{ values.name }}.git
+    targetRevision: main
+    path: .
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${{ values.name }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

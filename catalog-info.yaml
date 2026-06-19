@@ -9,4 +9,5 @@ spec:
     - ./catalog/policy-reporter.yaml
     - ./templates/new-service/template.yaml
     - ./templates/new-service-full/template.yaml
+    - ./templates/new-service-helm/template.yaml
     - ./templates/lambda/template.yaml

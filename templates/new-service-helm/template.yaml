@@ -1,0 +1,68 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: new-service-helm
+  title: Microsserviço (Helm)
+  description: App que consome um arquétipo Helm central POR VERSÃO (oci://ghcr.io/tourinhom/charts). Nasce com um consumer chart fino + Argo Application + Renovate pra bumpar a versão do arquétipo.
+  tags:
+    - helm
+    - service
+    - kubernetes
+spec:
+  owner: group:default/platform-engineering
+  type: service
+
+  # Identidade reusa o snippet compartilhado (name/description/system). O
+  # arquétipo é a ÚNICA pergunta a mais — é escolha de identidade (que tipo de
+  # workload), não um knob de runtime, então passa no teste "alguém faz isso
+  # toda vez?". Os values do app nascem mínimos; o resto vem do arquétipo@versão.
+  parameters:
+    - $yaml: ../_shared/params-service.yaml
+    - title: Arquétipo
+      required: [archetype]
+      properties:
+        archetype:
+          title: Arquétipo
+          type: string
+          description: Qual chart central este app consome. Define a forma do workload.
+          default: backend
+          enum:
+            - backend
+            - frontend
+            - batch
+          enumNames:
+            - Backend — Deployment HTTP (Service + probes)
+            - Frontend — nginx (configmap próprio)
+            - Batch — CronJob (sem Service/probe)
+
+  # Auto-contido (sem repo de código): só o repo de DEPLOY gitops-<nome> com o
+  # consumer chart. Argo autodetecta o Chart.yaml -> Helm, puxa o arquétipo do
+  # OCI e renderiza. Renovate (helm manager) abre PR quando sai versão nova do
+  # arquétipo — atualização central via pin-por-versão, sem copiar o chart.
+  steps:
+    - id: fetch
+      name: Montar consumer chart
+      action: fetch:template
+      input:
+        url: ./skeleton
+        targetPath: gitops
+        values:
+          name: ${{ parameters.name }}
+          description: ${{ parameters.description }}
+          owner: ${{ user.ref }}
+          system: ${{ parameters.system }}
+          archetype: ${{ parameters.archetype }}
+
+    - $yaml: ../_shared/step-publish-gitops.yaml
+
+    # Sem catalog:register: auto-discovery (GithubEntityProvider varre
+    # tourinho-labs) é o dono do registro — register explícito dava 409 em
+    # re-scaffold. A app aparece no catálogo no próximo scan.
+
+  # Output de UM repo (gitops). O output-gitops.yaml compartilhado linka dois
+  # repos (código + deploy) e referencia steps.publish, que aqui não existe —
+  # por isso o link único é inline.
+  output:
+    links:
+      - title: Repositório de deploy (gitops)
+        url: ${{ steps.publishGitops.output.remoteUrl }}
