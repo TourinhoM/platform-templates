@@ -1,0 +1,4 @@
+# Ambiente dev. A image é o artefato promovido: o CI semeia o 1º release (1.0.0)
+# e o Kargo assume a promoção dev->hml->prod depois. Sob a chave do arquétipo.
+${{ values.archetype }}:
+  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0

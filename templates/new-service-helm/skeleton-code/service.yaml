@@ -1,0 +1,16 @@
+# ─────────────────────────────────────────────────────────────────────────
+# service.yaml — CONTRATO de deploy do dev. Edite aqui; ao dar push, o CI
+# sincroniza pro repo de gitops (você não tem acesso a ele). São só os
+# PARÂMETROS do arquétipo já escolhido — não há arquétipo/versão/imagem aqui:
+#   - versão do arquétipo  → plataforma (Renovate no gitops)
+#   - tag da imagem        → CI/Kargo (promoção por ambiente)
+#   - otel, securityContext, CPU, labels → piso fixo da plataforma (arquétipo)
+# ─────────────────────────────────────────────────────────────────────────
+team: ${{ values.system }}     # dono do serviço (label + FinOps). Ajuste pro squad.
+system: ${{ values.system }}   # system do catálogo.
+port: 8080                     # porta do container.
+memory: 256Mi                  # limit de memória (Mi|Gi).
+replicas: 2                    # nº de réplicas.
+health:
+  readiness: /health
+  liveness: /health

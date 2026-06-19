@@ -1,10 +1,13 @@
-# Só o ESPECÍFICO do app; todo o resto vem de ${{ values.archetype }}@2.0.0.
-# Os valores entram sob a chave do arquétipo (nome do subchart).
+# Parâmetros COMUNS do app — materializados pelo config-sync a partir do
+# service.yaml do repo de código (o dev edita lá; máquina escreve aqui).
+# NÃO tem image: a imagem é POR AMBIENTE (values/<env>.yaml), promovida pelo
+# CI/Kargo. Valores sob a chave do arquétipo (nome do subchart).
 ${{ values.archetype }}:
-  # team é required no arquétipo (governança — antídoto ao "indefinido").
-  # Derivado do system no scaffold; ajuste pro squad dono no day-2.
   team: ${{ values.system }}
   system: ${{ values.system }}
-  # Imagem publicada pelo CI do repo de código (semantic-release: 1º release = 1.0.0).
-  # Renovate (datasource docker) bumpa este tag conforme o CI publica versões novas.
-  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0
+  port: 8080
+  memory: 256Mi
+  replicas: 2
+  health:
+    readiness: /health
+    liveness: /health

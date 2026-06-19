@@ -1,0 +1,4 @@
+# Ambiente prod. A image avança por promoção do Kargo (hml -> prod), gated.
+# Nasce semeada com o 1º release; daí o Kargo controla as versões.
+${{ values.archetype }}:
+  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0

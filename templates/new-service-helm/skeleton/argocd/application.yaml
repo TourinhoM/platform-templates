@@ -1,11 +1,13 @@
-# Registro auto-contido no Argo. Source aponta pro próprio repo; o Argo
-# autodetecta o Chart.yaml -> Helm, resolve a dep do arquétipo no OCI e
-# renderiza. Fica em argocd/ (fora do que o Helm empacota) pra não virar
-# template do chart.
+# Registro multi-ambiente: uma Application por env (dev/hml/prod), cada uma
+# combinando values.yaml (params comuns) + values/<env>.yaml (image do env).
+# Argo autodetecta Helm pelo Chart.yaml e resolve o arquétipo do OCI.
+# Kargo-ready: a promoção escreve o image em values/<env>.yaml e o Argo
+# sincroniza só aquele ambiente. Os três nascem com a imagem inicial; o Kargo
+# passa a gatekeepar a promoção de versões novas entre dev -> hml -> prod.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: ${{ values.name }}
+  name: ${{ values.name }}-dev
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -15,9 +17,67 @@ spec:
     repoURL: https://github.com/tourinho-labs/gitops-${{ values.name }}.git
     targetRevision: main
     path: .
+    helm:
+      valueFiles:
+        - values.yaml
+        - values/dev.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: ${{ values.name }}
+    namespace: ${{ values.name }}-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${{ values.name }}-hml
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tourinho-labs/gitops-${{ values.name }}.git
+    targetRevision: main
+    path: .
+    helm:
+      valueFiles:
+        - values.yaml
+        - values/hml.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${{ values.name }}-hml
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ${{ values.name }}-prod
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tourinho-labs/gitops-${{ values.name }}.git
+    targetRevision: main
+    path: .
+    helm:
+      valueFiles:
+        - values.yaml
+        - values/prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ${{ values.name }}-prod
   syncPolicy:
     automated:
       prune: true

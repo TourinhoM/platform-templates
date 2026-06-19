@@ -1,29 +1,37 @@
-# ${{ values.name }}
+# ${{ values.name }} — deploy (gitops)
 
-${{ values.description }}
+Repo de **deploy** do `${{ values.name }}`, **gerenciado por máquina** — par do
+repo de **código** `tourinho-labs/${{ values.name }}`. **O dev não edita aqui**:
+ele mexe no `service.yaml` do repo de código, e o CI materializa este repo.
 
-Repo de **deploy** (gitops) do `${{ values.name }}` — par do repo de **código**
-`tourinho-labs/${{ values.name }}` (Fastify + CI que builda a imagem). Aqui o app
-é deployado **consumindo o arquétipo Helm central `${{ values.archetype }}@2.0.0`**
-(`oci://ghcr.io/tourinhom/charts`) — por versão, sem copiar o chart, com a `image`
-apontando pro que o CI do repo de código publica.
+O app é deployado **consumindo o arquétipo Helm central `${{ values.archetype }}`**
+(`oci://ghcr.io/tourinhom/charts`) por versão, sem copiar o chart.
 
-## Como funciona
+## Estrutura (multi-ambiente)
 
-- **`Chart.yaml`** declara a dependência do arquétipo por versão. O arquétipo traz
-  os defaults da plataforma (labels + governança, securityContext, resources, probes).
-- **`values.yaml`** carrega só o específico do app (`team`, `system`, `image`).
-- **`argocd/application.yaml`** registra no Argo; ele autodetecta o `Chart.yaml`,
-  puxa o arquétipo do OCI e renderiza.
-- **`renovate.json`** abre PR quando sai versão nova do arquétipo — atualização
-  central via pin-por-versão.
-
-## Day-2
-
-```bash
-helm dependency update .   # resolve o arquétipo do OCI
-helm template . | less     # vê o YAML final renderizado
+```
+Chart.yaml              dep <arquétipo>@versão
+values.yaml             params COMUNS (do service.yaml do dev)
+values/
+  dev.yaml              image do dev   (+ overrides do env)
+  hml.yaml              image do hml
+  prod.yaml             image do prod
+argocd/application.yaml uma Application por env (dev/hml/prod), com
+                        valueFiles [values.yaml, values/<env>.yaml]
+renovate.json           bump do arquétipo
 ```
 
-Mudar comportamento = editar `values.yaml` (o que o arquétipo expõe) ou subir a
-`version` da dependência. Sem `if` em template, sem cópia de chart.
+## Quem escreve o quê (ninguém à mão)
+
+| Camada | Arquivo | Quem | Como |
+|--------|---------|------|------|
+| params comuns | `values.yaml` | **CI config-sync** | dev edita `service.yaml` no código → push |
+| image por ambiente | `values/<env>.yaml` | **CI / Kargo** | promoção dev → hml → prod (gated) |
+| versão do arquétipo | `Chart.yaml` | **Renovate** | PR quando sai versão nova do template |
+
+## Promoção de ambiente (Kargo-ready)
+
+Cada ambiente tem sua Application e seu `values/<env>.yaml`. A promoção avança a
+`image` de um env pro próximo (`values/dev.yaml` → `values/hml.yaml` → `…/prod.yaml`);
+o Argo sincroniza só o ambiente alterado. Os três nascem com a imagem inicial; o
+Kargo passa a gatekeepar a promoção das versões novas.

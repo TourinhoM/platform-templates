@@ -63,11 +63,16 @@ spec:
           # do serviço — é o que o auto-discovery registra no catálogo.
           includeK8s: true
 
-    # Overlay de UM arquivo: troca o caller ci-tag.yml pra apontar no
-    # ci-tag-helm.yml (promoção edita values.yaml, não kustomization.yaml).
-    # Reusa todo o resto do skeleton de código compartilhado.
-    - id: fetch-code-helm-ci
-      name: Caller de CI Helm (override do ci-tag)
+    # Overlay no repo de código (reusa todo o resto do skeleton compartilhado):
+    #  - service.yaml: o CONTRATO que o dev edita (params do arquétipo). Único
+    #    arquivo de deploy que o dev toca — ele não tem acesso ao gitops.
+    #  - .github/workflows/ci-tag.yml: caller apontando no ci-tag-helm (promoção
+    #    de image por ambiente, não kustomization.yaml).
+    #  - .github/workflows/config-sync.yml: on push, sincroniza service.yaml ->
+    #    values.yaml do gitops (via token do App). Workflows = copyWithoutTemplating;
+    #    service.yaml é templado (usa system).
+    - id: fetch-code-overlay
+      name: Overlay do código (service.yaml + callers Helm)
       action: fetch:template
       input:
         url: ./skeleton-code
@@ -76,6 +81,7 @@ spec:
           - .github/workflows/**
         values:
           name: ${{ parameters.name }}
+          system: ${{ parameters.system }}
 
     - id: fetch-gitops
       name: Montar consumer chart (deploy)
