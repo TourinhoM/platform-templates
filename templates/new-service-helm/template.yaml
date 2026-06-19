@@ -58,7 +58,7 @@ spec:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
-          system: ${{ parameters.system }}
+          system: ${{ parameters.system | parseEntityRef | pick('name') }}
           # Mantém as anotações de deploy (kubernetes-id, argocd) no catalog-info
           # do serviço — é o que o auto-discovery registra no catálogo.
           includeK8s: true
@@ -81,7 +81,7 @@ spec:
           - .github/workflows/**
         values:
           name: ${{ parameters.name }}
-          system: ${{ parameters.system }}
+          system: ${{ parameters.system | parseEntityRef | pick('name') }}
 
     - id: fetch-gitops
       name: Montar consumer chart (deploy)
@@ -93,7 +93,7 @@ spec:
           name: ${{ parameters.name }}
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
-          system: ${{ parameters.system }}
+          system: ${{ parameters.system | parseEntityRef | pick('name') }}
           archetype: ${{ parameters.archetype }}
 
     - $yaml: ../_shared/step-publish-code.yaml
