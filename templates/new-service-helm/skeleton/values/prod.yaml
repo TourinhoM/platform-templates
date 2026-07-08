@@ -1,4 +1,2 @@
-# Ambiente prod. A image avança por promoção do Kargo (hml -> prod), gated.
-# Nasce semeada com o 1º release; daí o Kargo controla as versões.
-${{ values.archetype }}:
-  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0
+# Delta do DEV para prod — dono: config-sync (copia de tools/microsservico/values/
+# prod.yaml do repo de código). Máquina (host/image) NÃO fica aqui. Vazio = usa a base.

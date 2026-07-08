@@ -1,0 +1,3 @@
+# Delta DEV — esparso, só o que difere da base. Vazio = usa a base como está.
+# Aninhado sob a chave do arquétipo. (Semântica Helm: se puser `env:` aqui, ela
+# SUBSTITUI a lista inteira da base — repita os itens que quer manter.)

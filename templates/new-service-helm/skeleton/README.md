@@ -2,36 +2,44 @@
 
 Repo de **deploy** do `${{ values.name }}`, **gerenciado por máquina** — par do
 repo de **código** `tourinho-labs/${{ values.name }}`. **O dev não edita aqui**:
-ele mexe no `service.yaml` do repo de código, e o CI materializa este repo.
+ele mexe em `tools/microsservico/` no repo de código, e o CI (config-sync) copia
+pra cá. Descoberta e Apps são da **plataforma** (ApplicationSet `scaffolded-apps-helm`),
+não deste repo.
 
-O app é deployado **consumindo o arquétipo Helm central `${{ values.archetype }}`**
+O app consome o **arquétipo Helm central `${{ values.archetype }}`**
 (`oci://ghcr.io/tourinhom/charts`) por versão, sem copiar o chart.
 
-## Estrutura (multi-ambiente)
+## Estrutura
 
 ```
-Chart.yaml              dep <arquétipo>@versão
-values.yaml             params COMUNS (do service.yaml do dev)
+Chart.yaml                 dep <arquétipo>@versão (Renovate bumpa)
+values.yaml                BASE — params comuns (config-sync copia do dev)
 values/
-  dev.yaml              image do dev   (+ overrides do env)
-  hml.yaml              image do hml
-  prod.yaml             image do prod
-argocd/application.yaml uma Application por env (dev/hml/prod), com
-                        valueFiles [values.yaml, values/<env>.yaml]
-renovate.json           bump do arquétipo
+  <env>.yaml               delta do dev por env (config-sync)
+  <env>.image.yaml         image por env — DONO: Kargo (nasce na promoção)
+image.seed.yaml            semente que o Kargo copia p/ criar <env>.image.yaml
+kargo/                     Project + Warehouse + Stages (dev→hml→prod)
+renovate.json              bump do arquétipo
 ```
 
 ## Quem escreve o quê (ninguém à mão)
 
-| Camada | Arquivo | Quem | Como |
-|--------|---------|------|------|
-| params comuns | `values.yaml` | **CI config-sync** | dev edita `service.yaml` no código → push |
-| image por ambiente | `values/<env>.yaml` | **CI / Kargo** | promoção dev → hml → prod (gated) |
-| versão do arquétipo | `Chart.yaml` | **Renovate** | PR quando sai versão nova do template |
+| Camada | Onde | Quem |
+|--------|------|------|
+| base + delta por env | `values.yaml`, `values/<env>.yaml` | **config-sync** (dev edita `tools/microsservico/` no código → push) |
+| host (`ambiente`/domínio) | `global.*` via ApplicationSet | **plataforma** (não vive no repo) |
+| image por env | `values/<env>.image.yaml` | **Kargo** (pin por digest) |
+| versão do arquétipo | `Chart.yaml` | **Renovate** |
 
-## Promoção de ambiente (Kargo-ready)
+Camadas no Argo (last-wins): `values.yaml` → `values/<env>.yaml` → `values/<env>.image.yaml`
+(+ `global.*` injetado pelo ApplicationSet).
 
-Cada ambiente tem sua Application e seu `values/<env>.yaml`. A promoção avança a
-`image` de um env pro próximo (`values/dev.yaml` → `values/hml.yaml` → `…/prod.yaml`);
-o Argo sincroniza só o ambiente alterado. Os três nascem com a imagem inicial; o
-Kargo passa a gatekeepar a promoção das versões novas.
+## Promoção de ambiente (Kargo)
+
+O **Warehouse** observa a image no ghcr e cria Freight (imutável, por digest). Os
+**Stages** promovem: **dev** (auto) → **hml** (auto, após verificação) → **prod**
+(**manual**). Cada promoção cria/atualiza `values/<env>.image.yaml`; o ApplicationSet
+`scaffolded-apps-helm-env` descobre o arquivo e **o ambiente passa a existir**.
+
+Ou seja: um app recém-scaffoldado **não nasce com os 3 ambientes** — cada env
+nasce quando é promovido (dev na 1ª image do CI; hml/prod nos gates seguintes).

@@ -1,4 +1,2 @@
-# Ambiente hml. A image avança por promoção do Kargo (dev -> hml), gated.
-# Nasce semeada com o 1º release; daí o Kargo controla as versões.
-${{ values.archetype }}:
-  image: ghcr.io/tourinho-labs/${{ values.name }}:1.0.0
+# Delta do DEV para hml — dono: config-sync (copia de tools/microsservico/values/
+# hml.yaml do repo de código). Máquina (host/image) NÃO fica aqui. Vazio = usa a base.

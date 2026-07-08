@@ -1,0 +1,104 @@
+# A corrente de promoção (requestedFreight.sources):
+#   dev  ← direct do Warehouse (todo Freight novo)
+#   hml  ← só o que foi VERIFIED no dev (após soak)
+#   prod ← só o que foi VERIFIED no hml   (+ promoção manual, ver project.yaml)
+# Cada Stage roda o MESMO ClusterPromotionTask (promote-helm, na plataforma),
+# mudando só `env`. A verification (smoke no Prometheus) destrava o próximo.
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev
+  namespace: ${{ values.name }}
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: ${{ values.name }}
+      sources:
+        direct: true
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: promote-helm
+            kind: ClusterPromotionTask
+          vars:
+            - { name: env, value: dev }
+            - { name: repoURL, value: https://github.com/tourinho-labs/gitops-${{ values.name }}.git }
+            - { name: image, value: ghcr.io/tourinho-labs/${{ values.name }} }
+            - { name: chartKey, value: ${{ values.archetype }} }
+            - { name: app, value: ${{ values.name }} }
+  verification:
+    analysisTemplates:
+      - name: smoke
+        kind: ClusterAnalysisTemplate
+    args:
+      - { name: app, value: ${{ values.name }} }
+      - { name: env, value: dev }
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: hml
+  namespace: ${{ values.name }}
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: ${{ values.name }}
+      sources:
+        stages: [dev]              # só Freight verified no dev
+        requiredSoakTime: 30m      # cozinha no dev antes de elegível
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: promote-helm
+            kind: ClusterPromotionTask
+          vars:
+            - { name: env, value: hml }
+            - { name: repoURL, value: https://github.com/tourinho-labs/gitops-${{ values.name }}.git }
+            - { name: image, value: ghcr.io/tourinho-labs/${{ values.name }} }
+            - { name: chartKey, value: ${{ values.archetype }} }
+            - { name: app, value: ${{ values.name }} }
+  verification:
+    analysisTemplates:
+      - name: smoke
+        kind: ClusterAnalysisTemplate
+    args:
+      - { name: app, value: ${{ values.name }} }
+      - { name: env, value: hml }
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: ${{ values.name }}
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: ${{ values.name }}
+      sources:
+        stages: [hml]              # só Freight verified no hml
+  # Sem entry no ProjectConfig → promoção MANUAL (operador aprova no Kargo).
+  promotionTemplate:
+    spec:
+      steps:
+        - task:
+            name: promote-helm
+            kind: ClusterPromotionTask
+          vars:
+            - { name: env, value: prod }
+            - { name: repoURL, value: https://github.com/tourinho-labs/gitops-${{ values.name }}.git }
+            - { name: image, value: ghcr.io/tourinho-labs/${{ values.name }} }
+            - { name: chartKey, value: ${{ values.archetype }} }
+            - { name: app, value: ${{ values.name }} }
+  verification:
+    analysisTemplates:
+      - name: smoke
+        kind: ClusterAnalysisTemplate
+    args:
+      - { name: app, value: ${{ values.name }} }
+      - { name: env, value: prod }

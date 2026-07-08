@@ -64,15 +64,16 @@ spec:
           includeK8s: true
 
     # Overlay no repo de código (reusa todo o resto do skeleton compartilhado):
-    #  - service.yaml: o CONTRATO que o dev edita (params do arquétipo). Único
-    #    arquivo de deploy que o dev toca — ele não tem acesso ao gitops.
-    #  - .github/workflows/ci-tag.yml: caller apontando no ci-tag-helm (promoção
-    #    de image por ambiente, não kustomization.yaml).
-    #  - .github/workflows/config-sync.yml: on push, sincroniza service.yaml ->
-    #    values.yaml do gitops (via token do App). Workflows = copyWithoutTemplating;
-    #    service.yaml é templado (usa system).
+    #  - tools/microsservico/{values.yaml,values/<env>.yaml}: o CONTRATO que o dev
+    #    edita (values-layering nativo, aninhado sob a chave do arquétipo). Único
+    #    lugar de deploy que o dev toca — ele não tem acesso ao gitops.
+    #  - .github/workflows/ci-tag.yml: caller no ci-tag-helm (build+push; a
+    #    promoção de image é do Kargo, não mais do CI).
+    #  - .github/workflows/config-sync.yml: on push em tools/microsservico/**,
+    #    copia os values pro gitops (via token do App). Workflows =
+    #    copyWithoutTemplating; os values são templados (usam system/archetype).
     - id: fetch-code-overlay
-      name: Overlay do código (service.yaml + callers Helm)
+      name: Overlay do código (contrato tools/ + callers Helm)
       action: fetch:template
       input:
         url: ./skeleton-code
@@ -82,6 +83,7 @@ spec:
         values:
           name: ${{ parameters.name }}
           system: ${{ parameters.system | parseEntityRef | pick('name') }}
+          archetype: ${{ parameters.archetype }}
 
     - id: fetch-gitops
       name: Montar consumer chart (deploy)

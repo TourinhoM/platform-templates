@@ -9,5 +9,5 @@ appVersion: "0.1.0"
 # defaults da plataforma (labels+governança, securityContext, resources, probes).
 dependencies:
   - name: ${{ values.archetype }}
-    version: "2.0.0"
+    version: "2.3.0"
     repository: oci://ghcr.io/tourinhom/charts

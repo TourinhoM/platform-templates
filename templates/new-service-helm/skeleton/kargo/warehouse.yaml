@@ -1,0 +1,16 @@
+# Observa a image que o CI publica no ghcr e cria Freight (pin por digest) a cada
+# tag nova. Única fonte da image — substitui o job update-gitops do ci-tag-helm.
+# Versão do chart NÃO entra aqui (é do Renovate): Kargo = image, Renovate = chart.
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: ${{ values.name }}
+  namespace: ${{ values.name }}
+spec:
+  freightCreationPolicy: Automatic
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/tourinho-labs/${{ values.name }}
+        imageSelectionStrategy: SemVer   # segue a tag semver do ci-tag (v1.2.0)
+        discoveryLimit: 20
+        strictSemvers: true

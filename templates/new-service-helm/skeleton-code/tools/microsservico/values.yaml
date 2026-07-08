@@ -1,0 +1,25 @@
+# ─────────────────────────────────────────────────────────────────────────
+# CONTRATO de deploy do dev (BASE, comum a todos os ambientes). Você edita AQUI;
+# ao dar push, o config-sync materializa no repo de gitops (você não acessa ele).
+# MESMA estrutura do gitops (aninhado sob a chave do arquétipo) → o sync é cópia
+# pura. Semântica Helm: map deep-merge, LISTA replace.
+#
+# NÃO tem aqui (é máquina/plataforma, não contrato do dev):
+#   - image        → Kargo (promoção por ambiente, pin por digest)
+#   - versão do arquétipo → Renovate (PR no Chart.yaml do gitops)
+#   - host/ambiente → plataforma (values/<env>.host.yaml, semeado)
+#   - securityContext, CPU, otel → piso fixo do arquétipo
+# ─────────────────────────────────────────────────────────────────────────
+${{ values.archetype }}:
+  team: ${{ values.system }}     # dono do serviço (label + FinOps). Ajuste pro squad.
+  system: ${{ values.system }}   # system do catálogo.
+  port: 8080                     # porta do container.
+  replicas: 2                    # réplicas (base; por-env em values/<env>.yaml).
+  perfil: 2-api                  # 1-front | 2-api | 3-processamento | 4-custom
+
+  # Opcionais (omita = default do arquétipo):
+  # autoscaling: { enabled: true, min: 2, max: 6, cpu: 70 }
+  # rota: { path: /, pathType: Prefix }   # publica via Ingress (host é convenção)
+  # health: { startupTimeout: 120s }      # só se o boot é lento
+  # env:                                    # lista k8s-native; não use pra segredo
+  #   - { name: LOG_LEVEL, value: info }

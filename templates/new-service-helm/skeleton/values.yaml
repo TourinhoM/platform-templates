@@ -1,13 +1,10 @@
-# Parâmetros COMUNS do app — materializados pelo config-sync a partir do
-# service.yaml do repo de código (o dev edita lá; máquina escreve aqui).
-# NÃO tem image: a imagem é POR AMBIENTE (values/<env>.yaml), promovida pelo
-# CI/Kargo. Valores sob a chave do arquétipo (nome do subchart).
+# BASE — materializada pelo config-sync a partir de tools/microsservico/values.yaml
+# do repo de código (o dev edita lá; máquina copia aqui). Sem image (é do Kargo,
+# values/<env>.image.yaml) e sem host (é do ApplicationSet, global.*). Valores sob
+# a chave do arquétipo (nome do subchart).
 ${{ values.archetype }}:
   team: ${{ values.system }}
   system: ${{ values.system }}
   port: 8080
-  memory: 256Mi
   replicas: 2
-  health:
-    readiness: /health
-    liveness: /health
+  perfil: 2-api
