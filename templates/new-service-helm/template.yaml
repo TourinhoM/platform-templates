@@ -78,6 +78,7 @@ spec:
       input:
         url: ./skeleton-code
         targetPath: code
+        replace: true
         copyWithoutTemplating:
           - .github/workflows/**
         values:
