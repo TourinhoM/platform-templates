@@ -14,4 +14,9 @@ input:
   sourcePath: gitops
   # Padrão da org: repos públicos (ver step-publish-code.yaml).
   repoVisibility: public
+  # gitops/main é MACHINE-OWNED: Kargo (promove image) e config-sync (materializa
+  # values) dão push DIRETO no main. O default do publish:github (protectDefault
+  # Branch: true) liga require-PR + enforce_admins, o que bloqueia os dois. Deploy
+  # não tem gate de merge aqui — o gate é o Stage do Kargo / a fonte no repo de código.
+  protectDefaultBranch: false
   gitCommitMessage: 'feat: scaffold gitops-${{ parameters.name }} via Backstage'
