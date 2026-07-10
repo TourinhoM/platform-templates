@@ -1,24 +1,12 @@
-# Kargo Project do app (1 por app, espelha o 1:1 app↔gitops-<app>). Namespace
-# onde vivem Warehouse/Stages/Freight + a credencial de git. Separado dos
-# namespaces de deploy (<app>-dev/hml/prod), que são das Argo Apps.
+# Kargo Project do app: namespace de Warehouse/Stages/Freight + credencial de git.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Project
 metadata:
   name: ${{ values.name }}
----
-# Promotion policies: dev e hml auto-adotam Freight novo; prod fica de fora →
-# promoção MANUAL (o gate humano). Só sobe o que passou na verification do anterior.
-apiVersion: kargo.akuity.io/v1alpha1
-kind: ProjectConfig
-metadata:
-  name: ${{ values.name }}
-  namespace: ${{ values.name }}
 spec:
+  # Auto-promove dev e hml; prod é manual.
   promotionPolicies:
-    - stageSelector:
-        name: dev
+    - stage: dev
       autoPromotionEnabled: true
-    - stageSelector:
-        name: hml
+    - stage: hml
       autoPromotionEnabled: true
-    # prod: ausente de propósito → manual.
