@@ -16,6 +16,9 @@ ${{ values.archetype }}:
   port: 8080                     # porta do container.
   replicas: 2                    # réplicas (base; por-env em values/<env>.yaml).
   perfil: 2-api                  # 1-front | 2-api | 3-processamento | 4-custom
+  health:                        # path por stack: js=/health, java=/actuator/health.
+    liveness: ${{ '/actuator/health/liveness' if values.stack == 'java' else '/health' }}
+    readiness: ${{ '/actuator/health/readiness' if values.stack == 'java' else '/health' }}
 
   # Opcionais (omita = default do arquétipo):
   # autoscaling: { enabled: true, min: 2, max: 6, cpu: 70 }

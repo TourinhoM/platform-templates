@@ -18,8 +18,8 @@ spec:
   # toda vez?". Os values do app nascem mínimos; o resto vem do arquétipo@versão.
   parameters:
     - $yaml: ../_shared/params-service.yaml
-    - title: Arquétipo
-      required: [archetype]
+    - title: Arquétipo & stack
+      required: [archetype, stack]
       properties:
         archetype:
           title: Arquétipo
@@ -34,6 +34,17 @@ spec:
             - Backend — Deployment HTTP (Service + probes)
             - Frontend — nginx (configmap próprio)
             - Batch — CronJob (sem Service/probe)
+        stack:
+          title: Stack
+          type: string
+          description: Linguagem/runtime do serviço. Define o skeleton de código e a convenção de health.
+          default: js
+          enum:
+            - js
+            - java
+          enumNames:
+            - JavaScript — Fastify (health em /health)
+            - Java — Spring Boot (health em /actuator/health)
 
   # Padrão de dois repos (igual ao new-service-full): código em ./code e deploy
   # em ./gitops; cada step-publish-* sobe só o seu sourcePath.
@@ -48,7 +59,8 @@ spec:
       name: Montar esqueleto do serviço
       action: fetch:template
       input:
-        url: ../new-service/skeleton
+        # js: skeleton Fastify atual. java: skeleton Spring (a criar em new-service-spring).
+        url: ${{ '../new-service/skeleton' if parameters.stack == 'js' else '../new-service-spring/skeleton' }}
         targetPath: code
         # Workflows usam ${{ }} do GitHub Actions, que colide com o template do
         # scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
@@ -85,6 +97,7 @@ spec:
           name: ${{ parameters.name }}
           system: ${{ parameters.system | parseEntityRef | pick('name') }}
           archetype: ${{ parameters.archetype }}
+          stack: ${{ parameters.stack }}
 
     - id: fetch-gitops
       name: Montar consumer chart (deploy)
