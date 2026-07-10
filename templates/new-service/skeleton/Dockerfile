@@ -1,10 +1,10 @@
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 WORKDIR /app
 RUN npm install -g npm@latest
 COPY package*.json ./
 RUN npm install --omit=dev
 
-FROM node:20-alpine
+FROM node:22-alpine
 # Pacotes do SO atualizados no build — a base image fica pra trás dos fixes
 # do Alpine e o gate Trivy (HIGH/CRITICAL com fix disponível) bloqueia o push.
 RUN apk upgrade --no-cache
