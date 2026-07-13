@@ -9,7 +9,7 @@ metadata:
     backstage.io/techdocs-ref: dir:.
 {%- if values.includeK8s %}
     backstage.io/kubernetes-id: ${{ values.name }}
-    argocd/app-name: ${{ values.name }}
+    argocd/app-selector: app=${{ values.name }}
     kyverno.io/namespace: ${{ values.name }}
     kyverno.io/kind: Deployment,Pod
     kyverno.io/resource-name: ${{ values.name }}
