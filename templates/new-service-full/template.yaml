@@ -13,17 +13,11 @@ spec:
   owner: group:default/platform-engineering
   type: service
 
-  # Form pergunta só identidade (name/description/system). Os knobs de deploy
-  # NÃO moram no Backstage de propósito: o serviço nasce com os defaults do
-  # contrato (tudo ligado menos banco) e o dev edita o platform.yaml no day-2 se
-  # quiser mudar — superfície única, sem seleção que ninguém revisa no scaffold.
+  # Form pergunta só identidade; knobs de deploy ficam no platform.yaml.
   parameters:
     - $yaml: ../_shared/params-service.yaml
 
-  # Padrão de dois repos: o esqueleto de código vai pra ./code e o de deploy
-  # pra ./gitops no workspace; cada step-publish-* sobe só o seu sourcePath.
-  # Os steps publish/output são snippets compartilhados em _shared/ — quando
-  # outro template adotar o mesmo padrão, reusa os mesmos arquivos.
+  # Padrão de dois repos: código vai pra ./code, deploy pra ./gitops.
   steps:
     - id: fetch-code
       name: Montar esqueleto do serviço
@@ -31,8 +25,7 @@ spec:
       input:
         url: ../new-service/skeleton
         targetPath: code
-        # Workflows usam ${{ }} do GitHub Actions, que colide com o template
-        # do scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
+        # Workflows têm ${{ }} de Actions: copia verbatim.
         copyWithoutTemplating:
           - .github/workflows/**
         values:
@@ -40,18 +33,10 @@ spec:
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
           system: ${{ parameters.system }}
-          # Mantém as anotações de deploy (kubernetes-id, argocd, kyverno) no
-          # catalog-info do serviço, mesmo com os manifests no repo gitops.
+          # Mantém as anotações de deploy no catalog-info.
           includeK8s: true
 
-    # platform.yaml (SSOT) + callers de CI do day-2, no repo de CÓDIGO. Skeleton
-    # separado (não o de código compartilhado) porque só o Microsserviço tem
-    # gitops repo — o new-service standalone não pode receber render.yml.
-    # platform.yaml nasce MÍNIMO (só name): todo o resto cai nos defaults do
-    # contrato (tudo on menos banco), aplicados pelo renderer day-2 a partir do
-    # schema.json. Os workflows vão verbatim (${{ }} do Actions). Não há mais
-    # constantes de deploy no day-1 — o gitops é materializado só no day-2,
-    # então não há como o day-1 driftar do schema (fonte única dos defaults).
+    # Emite o platform.yaml e os callers de CI day-2 no repo de código.
     - id: fetch-platform-intent
       name: Emitir platform.yaml + CI day-2
       action: fetch:template
@@ -63,21 +48,7 @@ spec:
         values:
           name: ${{ parameters.name }}
 
-    # O CONTEÚDO do gitops NÃO é renderizado no day-1. O renderer day-2
-    # (render-gitops, mesmo render.js, defaults herdados do schema.json) é o
-    # ÚNICO que materializa base/ + overlays/dev + stages/{hml,prod}. Assim os
-    # defaults moram num lugar só (o contrato) — sem constantes duplicadas aqui
-    # que poderiam driftar do schema. O day-1 cria o repo com README + o CI do
-    # gitops (.github/workflows/ci.yml); o primeiro push de platform.yaml dispara
-    # o render que popula o resto.
-    # POR QUE o workflow nasce aqui (e não no render): o render-gitops escreve com
-    # o token do RELEASE_APP, que NÃO tem (nem deve ter) permissão `workflows` —
-    # um token que só renderiza manifesto não pode reescrever CI. O Backstage (que
-    # já cria workflows no repo de código) provisiona o ci.yml do gitops uma vez;
-    # o render nunca toca em .github/workflows. copyWithoutTemplating porque
-    # workflow tem ${{ }} de Actions que colide com o scaffolder.
-    # (Banco nasce off por default → nada de DB pra remover aqui; o render day-2
-    # só emite os artefatos de banco quando database:true.)
+    # Cria o repo de deploy com README + CI do gitops; o conteúdo é renderizado no day-2.
     - id: fetch-gitops-bootstrap
       name: Bootstrap do repo de deploy (gitops)
       action: fetch:template
@@ -93,10 +64,7 @@ spec:
 
     - $yaml: ../_shared/step-publish-gitops.yaml
 
-    # Sem catalog:register: o auto-discovery (GithubEntityProvider varre
-    # tourinho-labs) é o dono do registro no catálogo. Register explícito aqui
-    # colidia com o discovery (409 Conflict em re-scaffold) — discovery é
-    # idempotente. Trade-off: a app aparece no catálogo só no próximo scan.
+    # Sem catalog:register: o auto-discovery é o dono do registro.
 
   output:
     $yaml: ../_shared/output-gitops.yaml

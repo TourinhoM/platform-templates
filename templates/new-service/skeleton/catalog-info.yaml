@@ -1,5 +1,4 @@
-# Gerado pelo scaffolder. Quase tudo é derivado — edite só o que precisar.
-# https://backstage.io/docs/features/software-catalog/descriptor-format#kind-component
+# Gerado pelo scaffolder; edite só o que precisar.
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
@@ -34,8 +33,7 @@ spec:
   dependsOn:
     - resource:default/policy-reporter
 {%- endif %}
-  # Relações surgem com o tempo — descomente e aponte quando existirem.
-  # O auto-discovery reingere este arquivo sozinho a cada 30min.
+  # Descomente e aponte relações quando existirem.
   # dependsOn:
   #   - resource:postgresql
   # providesApis:

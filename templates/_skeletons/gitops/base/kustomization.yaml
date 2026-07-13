@@ -1,11 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# BASE — tudo agnóstico de ambiente. Os overlays/{dev,hml,prod} referenciam este
-# base e só acrescentam o que varia: a claim AppNamespace (name <app>-<env>), o
-# ExternalSecret (path do Vault por env) e o images.newTag (promoção por env).
-# Sem namespace aqui: quem define é o destination.namespace do ApplicationSet
-# (<app>-<env>); sem images aqui: o newTag mora no overlay.
+# Base agnóstica de ambiente; overlays acrescentam o que varia.
 components:
   - https://github.com/TourinhoM/platform-app-base//components/workload?ref=main
   - https://github.com/TourinhoM/platform-app-base//components/metrics?ref=main
@@ -19,8 +15,7 @@ components:
   - https://github.com/TourinhoM/platform-app-base//components/bindings/database?ref=main
 {%- endif %}
 
-# Label p/ o plugin Kubernetes do Backstage descobrir os workloads dos 3 envs
-# (mesmo kubernetes-id → o componente mostra dev/hml/prod juntos).
+# Label p/ o plugin Kubernetes do Backstage descobrir os workloads.
 labels:
   - pairs:
       backstage.io/kubernetes-id: ${{ values.name }}
@@ -34,20 +29,14 @@ configMapGenerator:
   - name: app-config
     literals:
       - name=${{ values.name }}
-      # hostname sempre presente (inócuo sem Ingress): ligar http no day-2 vira
-      # só o toggle do component, sem mexer aqui.
+      # hostname sempre presente.
       - hostname=${{ values.name }}.local
-      # paths das probes: source dos replacements do workload base → httpGet.path
-      # do Deployment. Default /health; override só se o app declarar health.* no
-      # platform.yaml (ex.: Quarkus). Convenção segura por construção, sem patch cru.
+      # paths das probes.
       - healthReadiness=${{ values.healthReadiness }}
       - healthLiveness=${{ values.healthLiveness }}
-      # memLimit: source do replacement do workload base → resources.limits.memory.
-      # O dev seta só a memória (mesma nos 3 envs por ora); CPU/requests = piso fixo
-      # do workload base. Override sempre via campo tipado → replacement, sem patch.
+      # memLimit → resources.limits.memory.
       - memLimit=${{ values.memLimit }}
-  # env vars não-sensíveis em env.properties (arquivo plano). Mudança = novo hash
-  # do app-env → Argo rola o pod nativamente (sem Reloader). Segredos NUNCA aqui.
+  # env vars não-sensíveis em env.properties; segredos nunca aqui.
   - name: app-env
     envs:
       - env.properties

@@ -1,9 +1,4 @@
-# Output do padrão de dois repos: links pro repo de código e de deploy (gitops).
-# Single-repo? Use output.yaml.
-# SEM link "Ver no catalog": não há catalog:register (auto-discovery é o dono) e
-# a entidade nem existe ao fim do scaffold — só aparece no próximo scan. Um
-# entityRef com prefixo literal + ${{}} ainda quebrava a validação no LOAD do
-# template (name inválido). Sem link = carrega e não dá 404 imediato.
+# Links pro repo de código e de deploy (gitops).
 links:
   - title: Repositório do serviço
     url: ${{ steps.publish.output.remoteUrl }}

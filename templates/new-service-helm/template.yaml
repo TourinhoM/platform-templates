@@ -12,10 +12,7 @@ spec:
   owner: group:default/platform-engineering
   type: service
 
-  # Identidade reusa o snippet compartilhado (name/description/system). O
-  # arquétipo é a ÚNICA pergunta a mais — é escolha de identidade (que tipo de
-  # workload), não um knob de runtime, então passa no teste "alguém faz isso
-  # toda vez?". Os values do app nascem mínimos; o resto vem do arquétipo@versão.
+  # Identidade reusa o snippet compartilhado; o arquétipo é a única pergunta a mais.
   parameters:
     - $yaml: ../_shared/params-service.yaml
     - title: Arquétipo & stack
@@ -46,14 +43,7 @@ spec:
             - JavaScript — Fastify (health em /health)
             - Java — Spring Boot (health em /actuator/health)
 
-  # Padrão de dois repos (igual ao new-service-full): código em ./code e deploy
-  # em ./gitops; cada step-publish-* sobe só o seu sourcePath.
-  #  - CÓDIGO (tourinho-labs/<nome>): esqueleto Fastify + CI que builda e publica
-  #    ghcr.io/tourinho-labs/<nome> (mesmo skeleton/CI do new-service-full).
-  #  - DEPLOY (gitops-<nome>): consumer chart fino — Argo autodetecta Chart.yaml
-  #    -> Helm, puxa o arquétipo do OCI por versão e renderiza, com a image
-  #    apontando pro que o CI do repo de código publica. Renovate bumpa o
-  #    arquétipo (pin-por-versão, sem copiar o chart).
+  # Padrão de dois repos: código em ./code, deploy em ./gitops.
   steps:
     - id: fetch-code
       name: Montar esqueleto do serviço
@@ -62,8 +52,7 @@ spec:
         # js: skeleton Fastify atual. java: skeleton Spring (a criar em new-service-spring).
         url: ${{ '../new-service/skeleton' if parameters.stack == 'js' else '../new-service-spring/skeleton' }}
         targetPath: code
-        # Workflows usam ${{ }} do GitHub Actions, que colide com o template do
-        # scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
+        # Workflows têm ${{ }} de Actions: copia verbatim.
         copyWithoutTemplating:
           - .github/workflows/**
         values:
@@ -71,19 +60,10 @@ spec:
           description: ${{ parameters.description }}
           owner: ${{ user.ref }}
           system: ${{ parameters.system | parseEntityRef | pick('name') }}
-          # Mantém as anotações de deploy (kubernetes-id, argocd) no catalog-info
-          # do serviço — é o que o auto-discovery registra no catálogo.
+          # Mantém as anotações de deploy no catalog-info.
           includeK8s: true
 
-    # Overlay no repo de código (reusa todo o resto do skeleton compartilhado):
-    #  - tools/microsservico/{values.yaml,values/<env>.yaml}: o CONTRATO que o dev
-    #    edita (values-layering nativo, aninhado sob a chave do arquétipo). Único
-    #    lugar de deploy que o dev toca — ele não tem acesso ao gitops.
-    #  - .github/workflows/ci-tag.yml: caller no ci-tag-helm (build+push; a
-    #    promoção de image é do Kargo, não mais do CI).
-    #  - .github/workflows/config-sync.yml: on push em tools/microsservico/**,
-    #    copia os values pro gitops (via token do App). Workflows =
-    #    copyWithoutTemplating; os values são templados (usam system/archetype).
+    # Overlay no repo de código: contrato tools/ + callers de CI Helm.
     - id: fetch-code-overlay
       name: Overlay do código (contrato tools/ + callers Helm)
       action: fetch:template
@@ -115,10 +95,7 @@ spec:
     - $yaml: ../_shared/step-publish-code.yaml
     - $yaml: ../_shared/step-publish-gitops.yaml
 
-    # Sem catalog:register: auto-discovery (GithubEntityProvider varre
-    # tourinho-labs) é o dono do registro — register explícito dava 409 em
-    # re-scaffold. A app aparece no catálogo no próximo scan (via catalog-info
-    # do repo de código).
+    # Sem catalog:register: o auto-discovery é o dono do registro.
 
   # Dois repos (código + deploy) — reusa o output compartilhado de dois repos.
   output:

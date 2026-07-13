@@ -14,8 +14,6 @@ jobs:
       packages: write
       id-token: write
     uses: TourinhoM/org-ci-platform/.github/workflows/ci-tag.yml@main
-    # Explícito (não `inherit`): o reusable está em outra org (TourinhoM) e
-    # `secrets: inherit` NÃO atravessa orgs — chega vazio. Necessário pra a
-    # promoção cross-repo (RELEASE_APP) funcionar nos apps da tourinho-labs.
+    # secrets explícito: inherit não atravessa a org.
     secrets:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}

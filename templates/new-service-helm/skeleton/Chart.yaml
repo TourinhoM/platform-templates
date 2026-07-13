@@ -4,9 +4,7 @@ description: ${{ values.description }}
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-# Consome o arquétipo central POR VERSÃO — não copia o chart. Bump da versão
-# abaixo = Renovate (helm manager) abre PR aqui. O arquétipo traz todos os
-# defaults da plataforma (labels+governança, securityContext, resources, probes).
+# Consome o arquétipo central por versão (bump via Renovate).
 dependencies:
   - name: ${{ values.archetype }}
     version: "2.4.3"

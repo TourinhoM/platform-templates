@@ -1,17 +1,9 @@
-# platform.yaml — contrato com a plataforma (fonte única da verdade do deploy).
-# Edite AQUI e dê push: o CI re-renderiza o repo gitops-${{ values.name }}
-# automaticamente (day-2). Você NUNCA edita o repo gitops à mão.
-#
-# O serviço já nasce COMPLETO nos defaults do contrato (platform-definition v0,
-# org-ci-platform): HTTP exposto, autoscaling (HPA+PDB), observabilidade. Só o
-# banco nasce desligado. Pra mudar qualquer coisa, descomente a linha e dê push.
+# platform.yaml — contrato com a plataforma; edite e dê push pra re-renderizar o gitops.
 name: ${{ values.name }}
 
 # --- knobs opcionais (descomente pra sobrescrever o default) ---
 #
 # database: true      # provisiona um banco por ambiente + conecta o serviço.
-#                     # Day-2: o CI cria o banco do env, publica a conexão no Vault
-#                     # e materializa o db-conn — você não toca em nada disso.
 # http: false         # serviço interno (sem Ingress + Certificate).
 # autoscaling: false  # réplica fixa (1), sem HPA/PDB.
 # memory: 512Mi       # limite de memória do container (default 256Mi).

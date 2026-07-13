@@ -1,6 +1,4 @@
-# SEM link "Ver no catalog": não há catalog:register (auto-discovery é o dono) e
-# a entidade nem existe ao fim do scaffold. entityRef com prefixo literal + ${{}}
-# quebrava a validação no LOAD do template.
+# Link pro repositório.
 links:
   - title: Repositório
     url: ${{ steps.publish.output.remoteUrl }}

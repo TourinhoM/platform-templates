@@ -1,6 +1,4 @@
-# Observa a image que o CI publica no ghcr e cria Freight (pin por digest) a cada
-# tag nova. Única fonte da image — substitui o job update-gitops do ci-tag-helm.
-# Versão do chart NÃO entra aqui (é do Renovate): Kargo = image, Renovate = chart.
+# Observa a image no ghcr e cria Freight (pin por digest) a cada tag nova.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Warehouse
 metadata:

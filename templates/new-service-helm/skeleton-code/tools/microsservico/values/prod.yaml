@@ -1,5 +1,4 @@
-# Delta PRD — só o que difere da base (prd costuma ser mais pesado). Aninhado sob
-# a chave do arquétipo. Exemplo (descomente/ajuste):
+# Delta prd — só o que difere da base. Exemplo:
 # ${{ values.archetype }}:
 #   replicas: 4
 #   autoscaling: { enabled: true, min: 3, max: 10, cpu: 70 }

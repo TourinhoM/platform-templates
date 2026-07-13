@@ -1,11 +1,6 @@
 name: Platform Definition
 
-# Valida o contrato (platform.yaml) no PR antes do merge — intenção inválida
-# não chega a renderizar o gitops.
-#
-# ⚠️ Se este check virar REQUIRED na branch protection, remova o filtro de
-# paths: required check que não dispara (PR sem mudança no platform.yaml) trava
-# o merge pra sempre. Sem filtro, a action no-opa verde em segundos.
+# Valida o contrato (platform.yaml) no PR antes do merge.
 on:
   pull_request:
     branches:

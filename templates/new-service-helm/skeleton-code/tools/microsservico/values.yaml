@@ -1,15 +1,4 @@
-# ─────────────────────────────────────────────────────────────────────────
-# CONTRATO de deploy do dev (BASE, comum a todos os ambientes). Você edita AQUI;
-# ao dar push, o config-sync materializa no repo de gitops (você não acessa ele).
-# MESMA estrutura do gitops (aninhado sob a chave do arquétipo) → o sync é cópia
-# pura. Semântica Helm: map deep-merge, LISTA replace.
-#
-# NÃO tem aqui (é máquina/plataforma, não contrato do dev):
-#   - image        → Kargo (promoção por ambiente, pin por digest)
-#   - versão do arquétipo → Renovate (PR no Chart.yaml do gitops)
-#   - host/ambiente → plataforma (values/<env>.host.yaml, semeado)
-#   - securityContext, CPU, otel → piso fixo do arquétipo
-# ─────────────────────────────────────────────────────────────────────────
+# Contrato de deploy do dev (base, comum a todos os ambientes); edite aqui e dê push.
 ${{ values.archetype }}:
   team: ${{ values.system }}     # dono do serviço (label + FinOps). Ajuste pro squad.
   system: ${{ values.system }}   # system do catálogo.

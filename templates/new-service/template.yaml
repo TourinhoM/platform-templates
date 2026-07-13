@@ -21,8 +21,7 @@ spec:
       action: fetch:template
       input:
         url: ./skeleton
-        # Workflows usam ${{ }} do GitHub Actions, que colide com o template
-        # do scaffolder — copia verbatim pra não esvaziar secrets/vars/github.
+        # Workflows têm ${{ }} de Actions: copia verbatim.
         copyWithoutTemplating:
           - .github/workflows/**
         values:
@@ -34,8 +33,7 @@ spec:
 
     - $yaml: ../_shared/step-publish.yaml
 
-    # Sem catalog:register: auto-discovery (GithubEntityProvider) é o dono do
-    # registro no catálogo — register explícito colidia (409 em re-scaffold).
+    # Sem catalog:register: o auto-discovery é o dono do registro.
 
   output:
     $yaml: ../_shared/output.yaml

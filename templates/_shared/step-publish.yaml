@@ -5,8 +5,7 @@ input:
   description: ${{ parameters.description }}
   repoUrl: github.com?owner=tourinho-labs&repo=${{ parameters.name }}
   defaultBranch: main
-  # Padrão da org: repos públicos (ver step-publish-code.yaml).
+  # Padrão da org: repos públicos.
   repoVisibility: public
-  # Conventional commit no commit inicial → semantic-release corta o primeiro
-  # release (tag) já no push da main, que então dispara o ci-tag.
+  # Conventional commit no commit inicial.
   gitCommitMessage: 'feat: scaffold ${{ parameters.name }} via Backstage'

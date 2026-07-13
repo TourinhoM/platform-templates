@@ -1,9 +1,4 @@
-# A corrente de promoção (requestedFreight.sources):
-#   dev  ← direct do Warehouse (todo Freight novo)
-#   hml  ← só o que foi VERIFIED no dev (após soak)
-#   prod ← só o que foi VERIFIED no hml   (+ promoção manual, ver project.yaml)
-# Cada Stage roda o MESMO ClusterPromotionTask (promote-helm, na plataforma),
-# mudando só `env`. A verification (smoke no Prometheus) destrava o próximo.
+# Corrente de promoção: dev ← Warehouse, hml ← dev, prod ← hml.
 ---
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage

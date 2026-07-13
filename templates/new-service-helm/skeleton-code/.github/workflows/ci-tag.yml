@@ -13,11 +13,8 @@ jobs:
       actions: read
       packages: write
       id-token: write
-    # Variante HELM: promove a tag editando o values.yaml do consumer chart no
-    # gitops-<app> (não kustomization.yaml). Difere do new-service-full só aqui.
+    # Variante Helm: promove a tag editando o values.yaml no gitops-<app>.
     uses: TourinhoM/org-ci-platform/.github/workflows/ci-tag-helm.yml@main
-    # Explícito (não `inherit`): o reusable está em outra org (TourinhoM) e
-    # `secrets: inherit` NÃO atravessa orgs — chega vazio. Necessário pra a
-    # promoção cross-repo (RELEASE_APP) funcionar nos apps da tourinho-labs.
+    # secrets explícito: inherit não atravessa a org.
     secrets:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}

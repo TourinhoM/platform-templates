@@ -1,6 +1,4 @@
-# CI do repo de deploy: só um smoke de `kustomize build`. Best-practices vivem
-# e são lintadas no platform-app-base, não aqui — assim PRs neste repo não
-# quebram com findings de estrutura que o time de infra não conserta aqui.
+# CI do repo de deploy: smoke de `kustomize build`.
 name: CI
 
 on:

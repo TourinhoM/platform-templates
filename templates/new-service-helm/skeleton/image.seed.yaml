@@ -1,7 +1,3 @@
-# Semente que o promote-helm COPIA pra values/<env>.image.yaml na 1ª promoção de
-# cada env (o yaml-update do Kargo NÃO cria arquivo/chave ausente). NÃO é lida por
-# nenhuma App: fica fora de values/ (não casa o glob do ApplicationSet) e o Helm
-# ignora (não é template). O valor abaixo é placeholder — o passo yaml-update o
-# troca pelo digest promovido no MESMO commit, então nunca chega a ser deployado.
+# Semente copiada pra values/<env>.image.yaml na 1ª promoção de cada env.
 ${{ values.archetype }}:
   image: ghcr.io/tourinho-labs/${{ values.name }}:0.0.0

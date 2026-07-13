@@ -1,9 +1,6 @@
 name: Config Sync
 
-# Quando o dev edita o contrato (tools/microsservico/**, push na main), sincroniza
-# os values pro repo de gitops (gitops-<app>), que o dev não acessa. A escrita
-# cross-repo é via token do RELEASE_APP no reusable (separation of duties: dev
-# mexe no contrato, máquina materializa o deploy). Image = Kargo, não passa aqui.
+# Sincroniza os values do contrato pro repo gitops-<app> quando o dev dá push.
 on:
   push:
     branches: [main]

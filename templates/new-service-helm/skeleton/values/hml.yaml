@@ -1,2 +1,1 @@
-# Delta do DEV para hml — dono: config-sync (copia de tools/microsservico/values/
-# hml.yaml do repo de código). Máquina (host/image) NÃO fica aqui. Vazio = usa a base.
+# Delta hml — materializado pelo config-sync; vazio = usa a base.
