@@ -24,6 +24,11 @@ metadata:
     - url: https://github.com/tourinho-labs/${{ values.name }}
       title: Repositório
       icon: github
+{%- if values.includeK8s %}
+    - url: https://grafana.local/d/app-overview-java-golden-path?var-namespace=${{ values.name }}-dev
+      title: Dashboard (Grafana)
+      icon: dashboard
+{%- endif %}
 spec:
   type: service
   lifecycle: experimental
