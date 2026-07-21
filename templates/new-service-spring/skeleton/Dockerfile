@@ -5,7 +5,10 @@ RUN mvn -B dependency:go-offline
 COPY src ./src
 RUN mvn -B -DskipTests package
 
-FROM docker.io/library/eclipse-temurin:21-jre
+FROM docker.io/library/eclipse-temurin:21-jre-jammy
+# jre-jammy (Ubuntu 22.04) em vez do 21-jre genérico — o genérico hoje aponta
+# pra uma imagem "chiselled" que embute o binário pebble (Go), com CVEs
+# HIGH em golang.org/x/net que não tem como corrigir via pom.xml.
 # Atualiza os pacotes do SO no build.
 RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
